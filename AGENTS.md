@@ -337,3 +337,24 @@ When reviewing complex TypeScript modules, check:
 - Are helper functions hiding real policy, or just hiding the lines where explanation is needed?
 - Do comments explain why decisions exist, or mostly repeat what the code says?
 - Would a reader understand why this code is shaped this way without opening three neighboring files?
+
+## Neko AIRI Pet Derivative
+
+This repository also derives AIRI Stage Tamagotchi into a lightweight optional Neko Pet.
+
+### Current Phase
+
+- Establish and measure the unmodified AIRI Windows baseline.
+- Do not implement Pet Lite until the baseline audit is complete.
+
+### Upstream Boundary
+
+- Official AIRI is remote `upstream`.
+- Keep Neko-specific work on branch `neko-pet-lite`.
+- Prefer new Pet Lite entry files over edits to shared AIRI core.
+- Never merge an AIRI update directly into a Neko release without rebuilding and validating Pet Lite.
+
+### Temporary Files
+
+- Put baseline logs, screenshots, metrics, generated reports, and experiments under `.Codex-tmp/baseline/`.
+- Do not commit `.Codex-tmp/`.

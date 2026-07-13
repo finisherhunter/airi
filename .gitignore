@@ -143,3 +143,6 @@ apps/stage-tamagotchi/electron.vite.config.*.mjs
 
 docs/ai/context/verifications/
 .playwright-mcp/
+
+# Neko derivative task artifacts
+.Codex-tmp/
