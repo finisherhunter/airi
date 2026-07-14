@@ -25,6 +25,7 @@ import {
   electronStartDraggingWindow,
   electronWindowSetAlwaysOnTop,
 } from '../../../../shared/eventa'
+import { petLiteFeatures } from '../../../../shared/pet-lite-features'
 
 const { isDark, toggleDark } = useTheme()
 const { t } = useI18n()
@@ -151,6 +152,7 @@ function resetMainWindowPosition() {
       >
         <div v-if="expanded" border="1 neutral-200 dark:neutral-800" mb-2 flex flex-col gap-1 rounded-2xl p-2 backdrop-blur-xl class="bg-neutral-100/80 shadow-2xl shadow-black/20 dark:bg-neutral-900/80">
           <ControlsIslandAuthButton
+            v-if="petLiteFeatures.authentication"
             :button-style="adjustStyleClasses.button"
             :icon-class="adjustStyleClasses.icon"
           />
@@ -178,7 +180,7 @@ function resetMainWindowPosition() {
               </template>
             </ControlButtonTooltip>
 
-            <ControlButtonTooltip disable-hoverable-content>
+            <ControlButtonTooltip v-if="petLiteFeatures.chat" disable-hoverable-content>
               <ControlButton :button-style="adjustStyleClasses.button" @click="openChat">
                 <div i-solar:chat-line-line-duotone :class="adjustStyleClasses.icon" text="neutral-800 dark:neutral-300" />
               </ControlButton>
@@ -256,7 +258,7 @@ function resetMainWindowPosition() {
           </template>
         </ControlButtonTooltip>
 
-        <ControlButtonTooltip side="left">
+        <ControlButtonTooltip v-if="petLiteFeatures.hearing" side="left">
           <ControlsIslandHearingConfig :show="blockingOverlays.has('hearing')" @update:show="setOverlay('hearing', $event)">
             <div class="relative">
               <ControlButton :button-style="adjustStyleClasses.button">

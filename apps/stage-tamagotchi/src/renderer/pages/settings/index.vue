@@ -5,6 +5,8 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { isPetLiteSettingsRouteVisible } from '../../../shared/pet-lite-features'
+
 const router = useRouter()
 const resolveAnimation = ref<() => void>()
 const { t } = useI18n()
@@ -26,7 +28,7 @@ const removeBeforeEach = router.beforeEach(async (_, __, next) => {
 const settings = computed(() => {
   return router
     .getRoutes()
-    .filter(route => route.meta?.settingsEntry)
+    .filter(route => route.meta?.settingsEntry && isPetLiteSettingsRouteVisible(route.path))
     .sort((a, b) => (Number(a.meta?.order ?? 0) - Number(b.meta?.order ?? 0)))
     .map(route => ({
       title: route.meta?.titleKey ? t(route.meta.titleKey as string) : (route.meta?.title as string | undefined) ?? '',

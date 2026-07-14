@@ -49,6 +49,7 @@ import {
   electronPluginUnload,
 } from '../shared/eventa/plugin/host'
 import { electronPluginToolsChanged } from '../shared/eventa/plugin/tools'
+import { petLiteDefaults } from '../shared/pet-lite-features'
 import { initializeElectronAuthCallbackBridge } from './bridges/electron-auth-callback'
 import { initializeStageThreeRuntimeTraceBridge } from './bridges/stage-three-runtime-trace'
 import { useLanguage } from './composables/use-language'
@@ -61,6 +62,11 @@ import { useStageWindowLifecycleStore } from './stores/stage-window-lifecycle'
 const { isDark: dark } = useTheme()
 const settingsStore = useSettings()
 const { language, themeColorsHue, themeColorsHueDynamic } = storeToRefs(settingsStore)
+
+dark.value = petLiteDefaults.dark
+language.value = petLiteDefaults.language
+settingsStore.controlsIslandIconSize = petLiteDefaults.controlsIslandIconSize
+settingsStore.analyticsEnabled = petLiteDefaults.analyticsEnabled
 const router = useRouter()
 const route = useRoute()
 const chatSessionStore = useChatSessionStore()

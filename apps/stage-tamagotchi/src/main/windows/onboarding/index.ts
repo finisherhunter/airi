@@ -48,6 +48,7 @@ export function setupOnboardingWindowManager(params: {
       minHeight: 500,
       show: false,
       icon,
+      autoHideMenuBar: true,
       resizable: true,
       frame: !isMacOS,
       titleBarStyle: isMacOS ? 'hidden' : undefined,

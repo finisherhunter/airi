@@ -3,6 +3,8 @@ import { IconItem } from '@proj-airi/stage-ui/components'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import { isPetLiteSettingsRouteVisible } from '../../../../shared/pet-lite-features'
+
 const { t } = useI18n()
 
 const settings = computed(() => [
@@ -30,7 +32,7 @@ const settings = computed(() => [
     icon: 'i-solar:code-bold-duotone',
     to: '/settings/system/developer',
   },
-])
+].filter(setting => isPetLiteSettingsRouteVisible(setting.to)))
 </script>
 
 <template>

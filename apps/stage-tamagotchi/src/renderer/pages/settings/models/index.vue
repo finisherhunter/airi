@@ -19,6 +19,7 @@ import { useSettings } from '@proj-airi/stage-ui/stores/settings'
 import { Button, Callout } from '@proj-airi/ui'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import {
   electronGodotStageApplySceneInput,
@@ -42,6 +43,7 @@ import {
 
 const settingsStore = useSettings()
 const { stageModelRenderer, stageModelSelectedDisplayModel } = storeToRefs(settingsStore)
+const { t } = useI18n()
 const context = useElectronEventaContext()
 const applyGodotStageSceneInput = useElectronEventaInvoke(electronGodotStageApplySceneInput)
 const applyGodotStageViewPatch = useElectronEventaInvoke(electronGodotStageApplyViewPatch)
@@ -71,8 +73,8 @@ let disposeGodotViewErrorListener: (() => void) | undefined
 
 const usesGodotStage = computed(() => stageModelRenderer.value === 'godot')
 const godotToggleLabel = computed(() => usesGodotStage.value
-  ? 'Back to Built-in Stage'
-  : 'Switch to Godot Stage (Experimental)')
+  ? t('settings.godot.back-to-built-in')
+  : t('settings.godot.switch-to-stage'))
 const godotStatusMessage = computed(() => {
   if (godotStageError.value)
     return godotStageError.value
@@ -364,7 +366,7 @@ onUnmounted(() => {
     <Callout
       v-if="godotStatusMessage"
       :class="['w-full max-w-6xl']"
-      label="Godot Stage"
+      :label="$t('settings.godot.stage-label')"
       theme="orange"
     >
       <p>{{ godotStatusMessage }}</p>

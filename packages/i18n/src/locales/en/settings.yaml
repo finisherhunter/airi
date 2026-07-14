@@ -214,6 +214,36 @@ live2d:
       none: None
       all: All
       custom: Custom
+  manual-parameters:
+    reset: Reset to default
+    head-rotation: Head rotation
+    angle-x: Angle X
+    angle-y: Angle Y
+    angle-z: Angle Z
+    eyes: Eyes
+    left-eye-open: Left eye open/close
+    right-eye-open: Right eye open/close
+    left-eye-smile: Left eye smiling
+    right-eye-smile: Right eye smiling
+    eyebrows: Eyebrows
+    left-eyebrow-horizontal: Left eyebrow left/right
+    right-eyebrow-horizontal: Right eyebrow left/right
+    left-eyebrow-vertical: Left eyebrow up/down
+    right-eyebrow-vertical: Right eyebrow up/down
+    left-eyebrow-angle: Left eyebrow angle
+    right-eyebrow-angle: Right eyebrow angle
+    left-eyebrow-form: Left eyebrow shape
+    right-eyebrow-form: Right eyebrow shape
+    mouth: Mouth
+    mouth-open: Mouth open/close
+    mouth-form: Mouth shape
+    face: Face
+    cheek: Cheek
+    body: Body
+    body-rotation-x: Body rotation X
+    body-rotation-y: Body rotation Y
+    body-rotation-z: Body rotation Z
+    breath: Breath
 microphone: Microphone
 models: Model
 pages:
@@ -1683,6 +1713,22 @@ vrm:
     from-url-placeholder: Enter VRM model URL
     title: Change Model
   title: VRM Settings
+  environment:
+    title: Environment
+    hemisphere: Hemisphere light
+    skybox: Skybox
+  lighting:
+    model-position: Model position
+    directional-rotation-x: Directional light rotation - X
+    directional-rotation-y: Directional light rotation - Y
+    directional-color: Directional light color
+    directional-intensity: Directional light intensity
+    ambient-intensity: Ambient light intensity
+    ambient-color: Ambient light color
+    hemisphere-intensity: Hemisphere light intensity
+    hemisphere-sky-color: Hemisphere sky color
+    hemisphere-ground-color: Hemisphere ground color
+  tips-title: Tips
   scale-and-position:
     model-info-title: Model Size Information
     model-info-x: Width (X)
@@ -1745,6 +1791,22 @@ spine:
   fps:
     options:
       unlimited: Unlimited
+godot:
+  stage-label: Godot Stage (Experimental)
+  back-to-built-in: Back to Built-in Stage
+  switch-to-stage: Switch to Godot Stage (Experimental)
+  view-title: Godot View
+  no-model: Select a VRM model before adjusting Godot stage view controls.
+  snapshot-missing: Godot stage view snapshot has not been received. Check the Electron/Godot bridge and Godot view-state payload parsing.
+  snapshot-not-received: No Godot stage view snapshot received
+  revision: Revision {revision} · {reason}
+  reason-loaded: loaded
+  camera-x: Camera X
+  camera-y: Camera Y
+  camera-z: Camera Z
+  camera-yaw: Camera yaw
+  camera-pitch: Camera pitch
+  camera-fov: Camera FOV
 websocket-secure-enabled:
   title: Enable Secure WebSocket (WSS)
   description: >-

@@ -53,6 +53,7 @@ export function setupSettingsWindowReusableFunc(params: {
       height: 800.0,
       show: false,
       icon,
+      autoHideMenuBar: true,
       webPreferences: {
         preload: join(getElectronMainDirname(), '../preload/index.mjs'),
         sandbox: false,
