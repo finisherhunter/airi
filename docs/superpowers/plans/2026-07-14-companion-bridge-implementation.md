@@ -40,9 +40,9 @@
 
 ### Neko
 
-- `app/src/hub/features/shell/HubRuntimeBridge.tsx`: 复用现有 Tauri runtime bridge 建立/关闭 AIRI Companion 客户端。
-- `app/src/hub/features/device/transfer/`、`app/src/hub/features/operations/`: 读取真实任务终态，只映射完成/失败/取消等低频业务节点。
-- `app/src/hub/features/blueking/`: 映射蓝盾解析完成/失败等终态，不发送制品表和原始链接。
+- `app/src/hub/features/companion/`: 新增独立来源适配器和 AIRI 客户端生命周期，不挂在仅负责 toast 的 `HubRuntimeBridge` 上。
+- `app/src/hub/features/device/transfer/`、`app/src/hub/features/device/install/`、`app/src/hub/features/device/pak/`、`app/src/hub/features/device/deploy/`: 在 Controller 已归一化的终态边界调用来源适配器，只映射完成/失败/取消等低频业务节点。
+- `app/src/hub/features/blueking/download/`: 只接已有下载/部署终态；当前链接解析没有独立完成/失败事件，本次不凭空补造。
 - 需要新增的 Neko 测试文件与上面来源适配器同目录，测试客户端不可用时的静默降级和幂等发送。
 - `docs/superpowers/` 下已有用户改动必须保留；如需补充桥接契约，只追加与本计划一致的内容。
 
@@ -131,11 +131,11 @@
 
 **Interfaces:**
 - `createCompanionSourceAdapter({ endpoint, token, source }): { send(event): Promise<'sent' | 'unavailable'>, dispose(): void }`.
-- `mapNekoTerminalEvent(input): CompanionEvent | null` maps only task completed/failed/cancelled, install completed, device disconnected and Blueking parse completed/failed.
+- `mapNekoTerminalEvent(input): CompanionEvent | null` maps only the real task completed/failed/cancelled and install/download/deploy terminal states available after Controller normalization. Device disconnect and Blueking link-parse completion/failure stay deferred until Neko has reliable source events.
 
 - [ ] Step 1: Write tests proving AIRI unavailable does not break Hub behavior and only terminal events produce messages.
 - [ ] Step 2: Run the focused Neko tests and confirm failure.
-- [ ] Step 3: Implement a quiet loopback WebSocket client using the AIRI wire event shape and existing Hub runtime lifecycle; send no raw progress, paths, URLs or action names.
+- [ ] Step 3: Implement a quiet loopback WebSocket client using the AIRI wire event shape and a source adapter owned by the Hub application lifecycle; send no raw progress, paths, URLs or action names.
 - [ ] Step 4: Run Neko frontend tests/typecheck/build checks available in the repository.
 - [ ] Step 5: Commit `feat(hub): publish terminal events to companion bridge` without touching the user’s unrelated docs changes.
 
