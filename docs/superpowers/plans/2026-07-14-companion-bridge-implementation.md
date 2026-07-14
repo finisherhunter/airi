@@ -50,6 +50,8 @@
 
 ### Task 1: Shared Companion Protocol
 
+**Status:** Implemented in `226e09eb0`; leader diff review complete. Package test/typecheck remains blocked by missing pnpm workspace links.
+
 **Files:**
 - Modify: `F:/dev/neko-airi-pet/packages/plugin-protocol/src/types/events.ts`
 - Create: `F:/dev/neko-airi-pet/packages/plugin-protocol/test/companion-events.test.ts`
@@ -65,6 +67,8 @@
 - [ ] Step 5: Inspect the diff for no transport or unrelated event changes, then commit `feat(protocol): add companion bridge events`.
 
 ### Task 2: AIRI Reaction Core
+
+**Status:** Implemented in `c95b6a6d2`; pure logic check passed, real package test remains blocked by missing workspace links.
 
 **Files:**
 - Create: `F:/dev/neko-airi-pet/apps/stage-tamagotchi/src/main/services/airi/companion-bridge/contracts.ts`
@@ -83,6 +87,8 @@
 - [ ] Step 5: Commit `feat(companion): add reaction resolver and scheduler`.
 
 ### Task 3: Caption and Model Presentation Adapter
+
+**Status:** Implemented in `b5d177da9`; static review complete, package test/typecheck remains blocked by missing workspace links.
 
 **Files:**
 - Modify: `F:/dev/neko-airi-pet/apps/stage-tamagotchi/src/shared/eventa/index.ts`
@@ -105,6 +111,8 @@
 
 ### Task 4: AIRI Bridge Service and Lifecycle
 
+**Status:** Implemented in `c290a357e` and `251dd2c71`; lifecycle/discovery implementation reviewed. Real AIRI package checks remain blocked by missing workspace links.
+
 **Files:**
 - Create: `F:/dev/neko-airi-pet/apps/stage-tamagotchi/src/main/services/airi/companion-bridge/service.ts`
 - Modify: `F:/dev/neko-airi-pet/apps/stage-tamagotchi/src/main/index.ts`
@@ -123,6 +131,8 @@
 
 ### Task 5: Neko Source Adapter
 
+**Status:** Implemented in `080d381`, `ed0d3ec`, and `7b65c7a`; Neko targeted tests 7/7, type-check, full tests 775/775, and Hub integration 14/14 passed.
+
 **Files:**
 - Modify: `F:/dev/neko-shell/app/src/hub/features/shell/HubRuntimeBridge.tsx` or add a focused sibling adapter owned by the Neko worker
 - Modify: `F:/dev/neko-shell/app/src/hub/features/device/transfer/` only at the existing terminal-state boundary
@@ -140,6 +150,8 @@
 - [ ] Step 5: Commit `feat(hub): publish terminal events to companion bridge` without touching the user’s unrelated docs changes.
 
 ### Task 6: Real Integration and Leader Acceptance
+
+**Status:** Static implementation review is complete; real Electron AIRI + Tauri Neko smoke test remains.
 
 **Files:**
 - Modify only files proven necessary by Tasks 1-5.
