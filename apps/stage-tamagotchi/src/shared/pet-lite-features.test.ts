@@ -24,6 +24,9 @@ describe('pet lite feature policy', () => {
     expect(petLiteRuntimeFeatures.spotlight).toBe(false)
     expect(petLiteRuntimeFeatures.artistry).toBe(false)
     expect(petLiteRuntimeFeatures.mcp).toBe(false)
+    expect(petLiteRuntimeFeatures.channelServer).toBe(false)
+    expect(petLiteRuntimeFeatures.godotStage).toBe(false)
+    expect(petLiteRuntimeFeatures.chat || petLiteRuntimeFeatures.hearing).toBe(false)
   })
 
   it('hides AI platform settings while preserving model and system settings', () => {

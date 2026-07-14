@@ -92,7 +92,7 @@ export function setupTray(params: {
   settingsWindow: SettingsWindowManager
   captionWindow: ReturnType<typeof setupCaptionWindowManager>
   widgetsWindow: WidgetsWindowManager
-  beatSyncBgWindow: Awaited<ReturnType<typeof setupBeatSync>>
+  beatSyncBgWindow: Awaited<ReturnType<typeof setupBeatSync>> | undefined
   aboutWindow: () => Promise<BrowserWindow>
   serverChannel: ServerChannel
   i18n: I18n
@@ -211,11 +211,13 @@ export function setupTray(params: {
         },
         { type: 'separator' },
         ...is.dev || env.MAIN_APP_DEBUG || env.APP_DEBUG
-          ? [
-              { type: 'header', label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.devtools') },
-              { label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.troubleshoot_beatsync'), click: () => params.beatSyncBgWindow.webContents.openDevTools({ mode: 'detach' }) },
-              { type: 'separator' },
-            ] as const
+          ? params.beatSyncBgWindow
+            ? [
+                { type: 'header', label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.devtools') },
+                { label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.troubleshoot_beatsync'), click: () => params.beatSyncBgWindow?.webContents.openDevTools({ mode: 'detach' }) },
+                { type: 'separator' },
+              ] as const
+            : []
           : [],
         { label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.quit'), click: () => app.quit() },
       ])

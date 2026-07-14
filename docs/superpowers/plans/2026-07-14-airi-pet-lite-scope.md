@@ -209,6 +209,44 @@ Record the exact commands and visible results in `.Codex-tmp/pet-lite-scope-veri
 - [x] Keep MCP source, settings route, and restoration inputs intact.
 - [x] Verify with the policy test, typecheck, and Electron build.
 
+### Task 8: Third Reversible Runtime Stop Batch: Channel Server
+
+**Files:**
+
+- Modify: `apps/stage-tamagotchi/src/shared/pet-lite-features.ts`
+- Modify: `apps/stage-tamagotchi/src/main/services/airi/channel-server/index.ts`
+- Modify: `apps/stage-tamagotchi/src/main/windows/shared/window.ts`
+- Modify: `apps/stage-tamagotchi/src/main/index.ts`
+- Modify: `apps/stage-tamagotchi/src/renderer/App.vue`
+- Create: `apps/stage-tamagotchi/src/main/services/airi/channel-server/index.test.ts`
+- Modify: `docs/superpowers/airi-pet-lite-backend-scope.md`
+- Modify: `INDEX.md`
+
+- [x] Add the reversible `channelServer` runtime policy flag and test it as inactive.
+- [x] Stop registering channel-server application lifecycle hooks when the policy is disabled.
+- [x] Stop installing channel-server certificate trust and reading/writing its config in the disabled path.
+- [x] Stop registering channel-server window IPC handlers and renderer WebSocket/context-bridge startup while disabled.
+- [x] Keep channel-server objects, source, settings, and plugin/window restoration paths intact.
+- [x] Keep desktop pet mouse tracking independent from channel-server shutdown.
+- [x] Verify with the focused channel-server test, policy test, typecheck, Electron build, and lint.
+
+### Task 9: Fourth Reversible Runtime Stop Batch: BeatSync And Inference Preload
+
+**Files:**
+
+- Modify: `apps/stage-tamagotchi/src/main/index.ts`
+- Modify: `apps/stage-tamagotchi/src/main/tray/index.ts`
+- Modify: `apps/stage-tamagotchi/src/renderer/App.vue`
+- Modify: `apps/stage-tamagotchi/src/shared/pet-lite-features.test.ts`
+- Modify: `docs/superpowers/airi-pet-lite-backend-scope.md`
+- Modify: `INDEX.md`
+
+- [x] Gate BeatSync window creation with the existing `hearing` runtime flag.
+- [x] Hide the BeatSync tray developer action when its background window is not created.
+- [x] Gate inference preload creation and triggering with the existing `chat`/`hearing` runtime flags.
+- [x] Keep BeatSync source, preload, renderer entry, provider key, and model preload implementation for restoration.
+- [x] Verify with the policy test, `stage-tamagotchi` typecheck, Electron build, clean Electron restart, and port check.
+
 ## Follow-up Boundary
 
-The next phase must evaluate whether the retained plugin host and window base IPC can be separated from `channel-server`. It must not touch Desktop Overlay or the preserved character/appearance/notification/developer paths without a new review.
+The next phase must verify the disabled channel-server path in a real Electron launch, then audit authentication/data maintenance. It must not touch Desktop Overlay or the preserved character/appearance/notification/developer paths without a new review.

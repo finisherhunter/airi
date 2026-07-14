@@ -8,6 +8,7 @@ import type { ServerChannel } from '../../services/airi/channel-server'
 import { isRendererUnavailable } from '@proj-airi/electron-vueuse/main'
 import { isMacOS } from 'std-env'
 
+import { petLiteRuntimeFeatures } from '../../../shared/pet-lite-features'
 import { createServerChannelService } from '../../services/airi/channel-server'
 import { createI18nService } from '../../services/airi/i18n'
 import { createAppService, createPowerMonitorService, createScreenService, createSystemPreferencesService, createWindowService } from '../../services/electron'
@@ -104,5 +105,7 @@ export async function setupBaseWindowElectronInvokes(params: {
 
   await createI18nService({ context: params.context, window: params.window, i18n: params.i18n })
 
-  createServerChannelService({ serverChannel: params.serverChannel })
+  if (petLiteRuntimeFeatures.channelServer) {
+    createServerChannelService({ serverChannel: params.serverChannel })
+  }
 }

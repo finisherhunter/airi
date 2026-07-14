@@ -154,7 +154,10 @@ app.whenReady().then(async () => {
 
   const serverChannel = injeca.provide('modules:channel-server', {
     dependsOn: { app: electronApp, lifecycle },
-    build: async ({ dependsOn }) => setupServerChannel(dependsOn),
+    build: async ({ dependsOn }) => setupServerChannel({
+      ...dependsOn,
+      enabled: petLiteRuntimeFeatures.channelServer,
+    }),
   })
 
   const airiHttpServer = injeca.provide('modules:airi-http-server', {
@@ -186,8 +189,9 @@ app.whenReady().then(async () => {
 
   const globalShortcut = injeca.provide('services:global-shortcut', () => setupGlobalShortcutService())
 
-  // BeatSync will create a background window to capture and process audio.
-  const beatSync = injeca.provide('windows:beat-sync', () => setupBeatSync())
+  // Keep the provider key for restoration, but do not create the audio capture
+  // window while hearing is disabled in Pet Lite.
+  const beatSync = injeca.provide('windows:beat-sync', () => petLiteRuntimeFeatures.hearing ? setupBeatSync() : undefined)
 
   const devtoolsMarkdownStressWindow = injeca.provide('windows:devtools:markdown-stress', () => setupDevtoolsWindow())
 

@@ -29,6 +29,7 @@ import {
   electronGetServerChannelConfig,
   electronGodotStageGetStatus,
   electronGodotStageStatusChanged,
+  electronGodotStageStop,
   electronSettingsNavigate,
   electronStartTrackMousePosition,
   i18nGetLocale,
@@ -86,7 +87,10 @@ function createFullStageRuntime() {
   const serverChannelStore = useModsServerChannelStore()
   const characterOrchestratorStore = useCharacterOrchestratorStore()
   const analyticsStore = useSharedAnalyticsStore()
-  const inferencePreload = useInferencePreload()
+  // Local inference preload only supports the chat/hearing runtime paths.
+  const inferencePreload = petLiteRuntimeFeatures.chat || petLiteRuntimeFeatures.hearing
+    ? useInferencePreload()
+    : undefined
   const pluginHostInspectorStore = usePluginHostInspectorStore()
   const mcpToolsStore = petLiteRuntimeFeatures.mcp ? useTamagotchiMcpToolsStore() : undefined
   const pluginToolsStore = useTamagotchiPluginToolsStore()
@@ -103,12 +107,19 @@ function createFullStageRuntime() {
   const startTrackingCursorPoint = useElectronEventaInvoke(electronStartTrackMousePosition)
   const reportPluginCapability = useElectronEventaInvoke(electronPluginUpdateCapability)
   const getGodotStageStatus = useElectronEventaInvoke(electronGodotStageGetStatus)
+  const stopGodotStage = useElectronEventaInvoke(electronGodotStageStop)
   const syncArtistryConfig = useElectronEventaInvoke(artistrySyncConfig)
   const isAuxiliaryChatRoute = initialWindowRoutePath === '/chat'
   const isGodotStageRoute = () => route.path === '/' || route.path.startsWith('/settings')
   const isWidgetsWindowRoute = () => route.path === '/widgets'
 
   function syncGodotStageRenderer(state: { state: 'stopped' | 'starting' | 'running' | 'stopping' | 'error' }) {
+    if (!petLiteRuntimeFeatures.godotStage) {
+      if (settingsStore.stageModelRenderer === 'godot')
+        settingsStore.restoreBuiltInStageModelRenderer()
+      return
+    }
+
     if (state.state === 'running') {
       settingsStore.setStageModelRenderer('godot')
       return
@@ -209,6 +220,19 @@ function createFullStageRuntime() {
 
       await displayModelsStore.loadDisplayModelsFromIndexedDB()
       await settingsStore.initializeStageModel()
+      if (!petLiteRuntimeFeatures.godotStage) {
+        try {
+          const godotStageStatus = await getGodotStageStatus()
+          if (godotStageStatus.state !== 'stopped')
+            await stopGodotStage()
+        }
+        catch (error) {
+          console.warn('[App] Failed to stop disabled Godot stage:', error)
+        }
+
+        if (settingsStore.stageModelRenderer === 'godot')
+          settingsStore.restoreBuiltInStageModelRenderer()
+      }
       if (petLiteRuntimeFeatures.hearing) {
         await settingsAudioDeviceStore.initialize()
       }
@@ -226,21 +250,25 @@ function createFullStageRuntime() {
         }
       }
 
-      const serverChannelConfig = await getServerChannelConfig()
-      serverChannelSettingsStore.tlsConfig = serverChannelConfig.tlsConfig ?? null
-      serverChannelSettingsStore.hostname = serverChannelConfig.hostname
-      serverChannelSettingsStore.authToken = serverChannelConfig.authToken
+      if (petLiteRuntimeFeatures.channelServer) {
+        const serverChannelConfig = await getServerChannelConfig()
+        serverChannelSettingsStore.tlsConfig = serverChannelConfig.tlsConfig ?? null
+        serverChannelSettingsStore.hostname = serverChannelConfig.hostname
+        serverChannelSettingsStore.authToken = serverChannelConfig.authToken
 
-      await serverChannelStore.initialize({
-        token: serverChannelConfig.authToken || undefined,
-        possibleEvents: ['ui:configure'],
-      }).catch(err => console.error('Failed to initialize Mods Server Channel in App.vue:', err))
-      if (!isAuxiliaryChatRoute) {
-        contextBridgeStore.initialize()
-        if (!isWidgetsWindowRoute()) {
+        await serverChannelStore.initialize({
+          token: serverChannelConfig.authToken || undefined,
+          possibleEvents: ['ui:configure'],
+        }).catch(err => console.error('Failed to initialize Mods Server Channel in App.vue:', err))
+        if (!isAuxiliaryChatRoute)
+          contextBridgeStore.initialize()
+      }
+
+      if (!isAuxiliaryChatRoute && !isWidgetsWindowRoute()) {
+        if (petLiteRuntimeFeatures.channelServer)
           characterOrchestratorStore.initialize()
-          await startTrackingCursorPoint()
-        }
+
+        await startTrackingCursorPoint()
       }
 
       defineInvokeHandler(context.value, pluginProtocolListProviders, async () => listProvidersForPluginHost())
@@ -255,7 +283,7 @@ function createFullStageRuntime() {
         })
       }
 
-      inferencePreload.triggerPreload()
+      void inferencePreload?.triggerPreload()
     },
     dispose() {
       if (!isAuxiliaryChatRoute)

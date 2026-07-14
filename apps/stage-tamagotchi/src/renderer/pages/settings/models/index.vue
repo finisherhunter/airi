@@ -33,6 +33,7 @@ import {
   electronGodotStageViewSnapshotChanged,
   electronGodotStageViewStateError,
 } from '../../../../shared/eventa'
+import { petLiteRuntimeFeatures } from '../../../../shared/pet-lite-features'
 import { useModelSettingsRuntimeSnapshot } from '../../../composables/model-settings-runtime-snapshot'
 import { assertGodotSceneInputSupportedDisplayModel } from './godot-scene-input'
 import { createGodotViewPatchQueue } from './godot-view-patch-queue'
@@ -392,6 +393,7 @@ onUnmounted(() => {
       >
         <template #actions>
           <Button
+            v-if="petLiteRuntimeFeatures.godotStage"
             variant="secondary"
             :loading="switchingGodotStage"
             :toggled="usesGodotStage"

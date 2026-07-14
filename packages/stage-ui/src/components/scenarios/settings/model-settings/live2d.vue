@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ModelSettingsRuntimeSnapshot } from './runtime'
 
-import { defaultModelParameters, useExpressionStore, useLive2dParams, useSettingsLive2d } from '@proj-airi/stage-ui-live2d'
+import { defaultModelParameters, defaultControlConfig as live2dControlConfig, useExpressionStore, useLive2dParams, useSettingsLive2d } from '@proj-airi/stage-ui-live2d'
 import { OPFSCache } from '@proj-airi/stage-ui-live2d/utils/opfs-loader'
 import { Button, Checkbox, FieldCheckbox, FieldCombobox, FieldRange, SelectTab } from '@proj-airi/ui'
 import { storeToRefs } from 'pinia'
@@ -245,7 +245,7 @@ function handleMotionSelect(selectedMotionPath: string | number | undefined) {
         </div>
       </template>
     </FieldRange>
-    <FieldRange v-model="position.x" as="div" :min="-3000" :max="3000" :step="1" :label="t('settings.live2d.scale-and-position.x')">
+    <FieldRange v-model="position.x" as="div" :min="live2dControlConfig.x.min" :max="live2dControlConfig.x.max" :step="live2dControlConfig.x.step" :label="t('settings.live2d.scale-and-position.x')">
       <template #label>
         <div flex items-center>
           <div>{{ t('settings.live2d.scale-and-position.x') }}</div>
@@ -255,7 +255,7 @@ function handleMotionSelect(selectedMotionPath: string | number | undefined) {
         </div>
       </template>
     </FieldRange>
-    <FieldRange v-model="position.y" as="div" :min="-3000" :max="3000" :step="1" :label="t('settings.live2d.scale-and-position.y')">
+    <FieldRange v-model="position.y" as="div" :min="live2dControlConfig.y.min" :max="live2dControlConfig.y.max" :step="live2dControlConfig.y.step" :label="t('settings.live2d.scale-and-position.y')">
       <template #label>
         <div flex items-center>
           <div>{{ t('settings.live2d.scale-and-position.y') }}</div>

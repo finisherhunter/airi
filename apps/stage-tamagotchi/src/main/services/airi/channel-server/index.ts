@@ -354,27 +354,23 @@ async function getOrCreateCertificate() {
   return { cert: withCertificateChain(cert, caCert), key }
 }
 
-export async function setupServerChannel(params: { lifecycle: Lifecycle }): Promise<Server> {
-  channelServerConfigStore.setup()
-  configureServerChannelCertificateTrust()
-
-  const storedConfig = await getChannelServerConfig()
-  const { changed: storedConfigChanged, config: normalizedStoredConfig } = ensureServerChannelConfigDefaults(storedConfig, randomUUID)
-  if (storedConfigChanged) {
-    channelServerConfigStore.update(normalizedStoredConfig)
+export function registerServerChannelLifecycle(params: {
+  lifecycle: Pick<Lifecycle, 'appHooks'>
+  serverChannel: Pick<Server, 'start' | 'stop'>
+  mutex: Mutex
+  enabled: boolean
+}) {
+  if (!params.enabled) {
+    return
   }
 
-  const serverChannel = createServer(await resolveServerRuntimeOptions(normalizedStoredConfig))
-
-  const mutex = new Mutex()
-
   params.lifecycle.appHooks.onStart(async () => {
-    const release = await mutex.acquire()
+    const release = await params.mutex.acquire()
 
     const log = useLogg('main/server-runtime').useGlobalConfig()
 
     try {
-      await serverChannel.start()
+      await params.serverChannel.start()
       log.log('WebSocket server started')
     }
     catch (error) {
@@ -385,15 +381,12 @@ export async function setupServerChannel(params: { lifecycle: Lifecycle }): Prom
     }
   })
   params.lifecycle.appHooks.onStop(async () => {
-    const release = await mutex.acquire()
+    const release = await params.mutex.acquire()
 
     const log = useLogg('main/server-runtime').useGlobalConfig()
-    if (!serverChannel) {
-      return
-    }
 
     try {
-      await serverChannel.stop()
+      await params.serverChannel.stop()
       log.log('WebSocket server closed')
     }
     catch (error) {
@@ -402,6 +395,32 @@ export async function setupServerChannel(params: { lifecycle: Lifecycle }): Prom
     finally {
       release()
     }
+  })
+}
+
+export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled?: boolean }): Promise<Server> {
+  const enabled = params.enabled ?? true
+  if (enabled) {
+    channelServerConfigStore.setup()
+    configureServerChannelCertificateTrust()
+  }
+
+  const storedConfig = enabled
+    ? await getChannelServerConfig()
+    : { hostname: '127.0.0.1', authToken: '', tlsConfig: null }
+  const { changed: storedConfigChanged, config: normalizedStoredConfig } = ensureServerChannelConfigDefaults(storedConfig, randomUUID)
+  if (enabled && storedConfigChanged) {
+    channelServerConfigStore.update(normalizedStoredConfig)
+  }
+
+  const serverChannel = createServer(await resolveServerRuntimeOptions(normalizedStoredConfig))
+
+  const mutex = new Mutex()
+  registerServerChannelLifecycle({
+    lifecycle: params.lifecycle,
+    serverChannel,
+    mutex,
+    enabled,
   })
 
   return {
