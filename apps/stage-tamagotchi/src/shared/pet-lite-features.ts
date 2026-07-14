@@ -23,6 +23,7 @@ export const petLiteRuntimeFeatures = {
   artistry: false,
   mcp: false,
   channelServer: false,
+  companionBridge: true,
   godotStage: false,
 } as const
 

@@ -139,13 +139,15 @@ function getServerRuntimeBaseOptions() {
   }
 }
 
-async function resolveServerRuntimeOptions(config: ServerOptions): Promise<ServerOptions> {
+async function resolveServerRuntimeOptions(config: ServerOptions, loopbackOnly = false): Promise<ServerOptions> {
   return {
     ...getServerRuntimeBaseOptions(),
     auth: {
       token: 'authToken' in config && typeof config.authToken === 'string' ? config.authToken : '',
     },
-    hostname: 'hostname' in config && typeof config.hostname === 'string'
+    hostname: loopbackOnly
+      ? '127.0.0.1'
+      : 'hostname' in config && typeof config.hostname === 'string'
       ? config.hostname || '127.0.0.1'
       : '127.0.0.1',
     tlsConfig: config.tlsConfig ? await getOrCreateCertificate() : null,
@@ -398,8 +400,13 @@ export function registerServerChannelLifecycle(params: {
   })
 }
 
-export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled?: boolean }): Promise<Server> {
+export interface ServerChannel extends Server {
+  getConnectionInfo: () => Promise<{ endpoint: string, token: string }>
+}
+
+export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled?: boolean, loopbackOnly?: boolean }): Promise<ServerChannel> {
   const enabled = params.enabled ?? true
+  const loopbackOnly = params.loopbackOnly ?? false
   if (enabled) {
     channelServerConfigStore.setup()
     configureServerChannelCertificateTrust()
@@ -413,7 +420,7 @@ export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled
     channelServerConfigStore.update(normalizedStoredConfig)
   }
 
-  const serverChannel = createServer(await resolveServerRuntimeOptions(normalizedStoredConfig))
+  const serverChannel = createServer(await resolveServerRuntimeOptions(normalizedStoredConfig, loopbackOnly))
 
   const mutex = new Mutex()
   registerServerChannelLifecycle({
@@ -458,10 +465,20 @@ export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled
     async updateConfig(config) {
       const release = await mutex.acquire()
       try {
-        await serverChannel.updateConfig(config)
+        await serverChannel.updateConfig({
+          ...config,
+          ...(loopbackOnly ? { hostname: '127.0.0.1' } : {}),
+        })
       }
       finally {
         release()
+      }
+    },
+    async getConnectionInfo() {
+      const config = await getChannelServerConfig()
+      return {
+        endpoint: `${config.tlsConfig ? 'wss' : 'ws'}://127.0.0.1:${getServerChannelPort()}/ws`,
+        token: config.authToken,
       }
     },
   }
@@ -524,5 +541,3 @@ export async function createServerChannelService(params: { serverChannel: Server
     }
   })
 }
-
-export type { Server as ServerChannel }

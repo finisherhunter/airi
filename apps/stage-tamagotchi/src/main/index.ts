@@ -20,6 +20,7 @@ import { isLinux } from 'std-env'
 
 import icon from '../../resources/icon.png?asset'
 
+import { companionReactionRequested } from '../shared/eventa'
 import { petLiteRuntimeFeatures } from '../shared/pet-lite-features'
 import { openDebugger, setupDebugger } from './app/debugger'
 import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
@@ -31,6 +32,7 @@ import { setElectronMainDirname } from './libs/electron/location'
 import { createI18n } from './libs/i18n'
 import { createWindowAuthManagerService } from './services/airi/auth'
 import { setupServerChannel } from './services/airi/channel-server'
+import { createCompanionBridge } from './services/airi/companion-bridge/service'
 import { setupGodotStageManager } from './services/airi/godot-stage'
 import { setupBuiltInServer } from './services/airi/http-server'
 import { setupMcpStdioManager } from './services/airi/mcp-servers'
@@ -156,7 +158,8 @@ app.whenReady().then(async () => {
     dependsOn: { app: electronApp, lifecycle },
     build: async ({ dependsOn }) => setupServerChannel({
       ...dependsOn,
-      enabled: petLiteRuntimeFeatures.channelServer,
+      enabled: petLiteRuntimeFeatures.channelServer || petLiteRuntimeFeatures.companionBridge,
+      loopbackOnly: petLiteRuntimeFeatures.companionBridge,
     }),
   })
 
@@ -248,6 +251,24 @@ app.whenReady().then(async () => {
     build: async ({ dependsOn }) => setupCaptionWindowManager(dependsOn),
   })
 
+  const companionBridge = injeca.provide('services:companion-bridge', {
+    dependsOn: { lifecycle, serverChannel, captionWindow },
+    build: ({ dependsOn }) => {
+      const { context, dispose } = createContext(ipcMain)
+      return createCompanionBridge({
+        lifecycle: dependsOn.lifecycle,
+        app,
+        serverChannel: dependsOn.serverChannel,
+        renderer: {
+          ensureReady: () => dependsOn.captionWindow.getWindow(),
+          emit: request => context.emit(companionReactionRequested, request),
+          dispose,
+        },
+        enabled: petLiteRuntimeFeatures.companionBridge,
+      })
+    },
+  })
+
   const tray = injeca.provide('app:tray', {
     dependsOn: { mainWindow, settingsWindow, captionWindow, widgetsWindow: widgetsManager, serverChannel, beatSyncBgWindow: beatSync, aboutWindow, i18n },
     build: async ({ dependsOn }) => setupTray(dependsOn),
@@ -286,7 +307,7 @@ app.whenReady().then(async () => {
   // Pet Lite keeps the original providers available for restoration, but only
   // the retained application roots are connected to the startup graph.
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
+    dependsOn: { mainWindow, tray, serverChannel, companionBridge, airiHttpServer, godotStageManager, pluginHost, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
     callback: noop,
   })
 
