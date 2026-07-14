@@ -400,11 +400,13 @@ export function registerServerChannelLifecycle(params: {
   })
 }
 
-export interface ServerChannel extends Server {
+export type ServerChannel = Server
+
+export type CompanionServerChannel = Server & {
   getConnectionInfo: () => Promise<{ endpoint: string, token: string }>
 }
 
-export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled?: boolean, loopbackOnly?: boolean }): Promise<ServerChannel> {
+export async function setupServerChannel(params: { lifecycle: Lifecycle, enabled?: boolean, loopbackOnly?: boolean }): Promise<CompanionServerChannel> {
   const enabled = params.enabled ?? true
   const loopbackOnly = params.loopbackOnly ?? false
   if (enabled) {

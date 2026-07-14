@@ -377,6 +377,9 @@ export function createCompanionBridge(params: CompanionBridgeServiceOptions): Co
       return
     }
 
+    if (activeReactionId && !rendererDisposed) {
+      params.renderer.emit(createClearRequest())
+    }
     running = false
     clearActiveReactionTimer()
     activeReactionId = undefined
