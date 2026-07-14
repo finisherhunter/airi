@@ -113,7 +113,7 @@
 
 **Interfaces:**
 - `setupCompanionBridge({ lifecycle, serverChannel, ... }): Promise<CompanionBridgeService>`.
-- The service starts only when AIRI is running and the bridge flag is enabled, listens on loopback through the existing server channel, emits capabilities, accepts events, sends ACKs and disposes all listeners/timers on stop.
+- The service starts only when AIRI is running and the bridge flag is enabled, starts the existing loopback server through `setupServerChannel`, and uses one internal `@proj-airi/server-sdk` client to observe `companion:event` and send `companion:ack`/`companion:capabilities`; it disposes the client, listeners and timers on stop.
 
 - [ ] Step 1: Write lifecycle tests for disabled/enabled startup, stop cleanup, duplicate event IDs and reconnect/closed-client behavior.
 - [ ] Step 2: Run the focused service test and confirm it fails.
