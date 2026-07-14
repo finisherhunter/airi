@@ -13,7 +13,7 @@
 
 普通用户入口已隐藏但后台暂未删除：认证、Provider、Modules、Memory、Connection、Data、通用设置和配色方案。
 第一批后台已进入 `可恢复停用`：聊天、麦克风听觉输入、Spotlight/全局快捷键和 Artistry bridge。插件宿主仍运行，因为开发者工具依赖它。所有源码和依赖仍保留。
-共享后台审计已完成：MCP 已进入第二批 `可恢复停用`；channel-server 已进入第三批 `可恢复停用`；BeatSync 和 inferencePreload 随 chat/hearing 进入第四批 `可恢复停用`。当前不启动 WebSocket、不注册连接 IPC、不建立渲染端连接，也不创建 BeatSync 音频捕获窗口或本地推理预加载。channel-server 是未来 Neko↔AIRI 通信桥的预留能力，不得按废弃模块删除；协议与恢复路径见 `docs/superpowers/airi-neko-bridge-contract.md`。认证和数据维护没有常驻后台任务。
+共享后台审计已完成：MCP 已进入第二批 `可恢复停用`；channel-server 已进入第三批 `可恢复停用`；BeatSync 和 inferencePreload 随 chat/hearing 进入第四批 `可恢复停用`。当前不启动 WebSocket、不注册连接 IPC、不建立渲染端连接，也不创建 BeatSync 音频捕获窗口或本地推理预加载。channel-server 是未来通用 Companion Bridge 的预留能力，不得按废弃模块删除；正式设计见 `docs/superpowers/specs/2026-07-14-companion-bridge-reaction-design.md`，恢复入口见 `docs/superpowers/airi-neko-bridge-contract.md`。认证和数据维护没有常驻后台任务。
 Godot 舞台已进入第五批 `可恢复停用`：Pet Lite 不显示 Godot 切换入口，启动时停止残留的 Godot sidecar 并恢复内置模型渲染器；AIRI 原有 Godot 管理器、协议和恢复路径保留，后续只跟随官方更新再评估。
 
 ## 先看这些文件
@@ -23,6 +23,7 @@ Godot 舞台已进入第五批 `可恢复停用`：Pet Lite 不显示 Godot 切�
 | `AGENTS.md` | AIRI 技术栈、开发命令和项目约束 |
 | `apps/stage-tamagotchi/src/shared/pet-lite-features.ts` | Pet Lite 用户入口策略和固定默认值 |
 | `docs/superpowers/airi-pet-lite-backend-scope.md` | 前端入口、后台边界、裁剪状态和恢复规则 |
+| `docs/superpowers/specs/2026-07-14-companion-bridge-reaction-design.md` | 通用桥接、轻量反应、队列和 Hiyori Pro 测试档案 |
 | `docs/superpowers/plans/2026-07-14-airi-pet-lite-scope.md` | 第一阶段实现与验证记录 |
 | `.Codex-tmp/_context-recovery.md` | 最近阶段的上下文恢复记录 |
 
