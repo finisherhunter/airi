@@ -631,6 +631,44 @@ export interface EventBaseMetadata {
   }
 }
 
+/** Shared semantic intents for events sent to a companion presentation host. */
+export type CompanionIntent = 'info' | 'success' | 'warning' | 'error' | 'reminder'
+
+/** Shared delivery priorities for companion events. */
+export type CompanionPriority = 'critical' | 'high' | 'normal' | 'low'
+
+/** Lifecycle status reported for a companion event. */
+export type CompanionAckStatus = 'accepted' | 'completed' | 'dropped'
+
+/** Event payload shared by companion event producers and presentation hosts. */
+export interface CompanionEvent {
+  id: string
+  source: string
+  topic: string
+  intent: CompanionIntent
+  priority: CompanionPriority
+  text: string
+  reactionHint?: string
+  coalesceKey?: string
+  ttlMs?: number
+  createdAt: number
+}
+
+/** Acknowledgement payload for a companion event. */
+export interface CompanionAck {
+  eventId: string
+  status: CompanionAckStatus
+  reason?: 'expired' | 'invalid' | 'superseded' | 'unavailable' | 'duplicate'
+}
+
+/** Presentation capabilities advertised by a companion host. */
+export interface CompanionCapabilities {
+  caption: boolean
+  motion: { live2d: boolean }
+  voice: boolean
+  commands: string[]
+}
+
 export type WithInputSource<Source extends keyof InputSource> = {
   [S in Source]: InputSource[S]
 }
@@ -1271,6 +1309,10 @@ export const outputGenAiChatToolCall = defineProtocolEventa<OutputGenAiChatToolC
 export const outputGenAiChatMessage = defineProtocolEventa<OutputGenAiChatMessageEvent>('output:gen-ai:chat:message')
 export const outputGenAiChatComplete = defineProtocolEventa<OutputGenAiChatCompleteEvent>('output:gen-ai:chat:complete')
 
+export const companionEvent = defineProtocolEventa<{ event: CompanionEvent }>('companion:event')
+export const companionAck = defineProtocolEventa<{ ack: CompanionAck }>('companion:ack')
+export const companionCapabilities = defineProtocolEventa<{ capabilities: CompanionCapabilities }>('companion:capabilities')
+
 export const sparkNotify = defineProtocolEventa<SparkNotifyEvent>('spark:notify')
 export const sparkEmit = defineProtocolEventa<SparkEmitEvent>('spark:emit')
 export const sparkCommand = defineProtocolEventa<SparkCommandEvent>('spark:command')
@@ -1457,6 +1499,10 @@ export interface ProtocolEvents<C = undefined> {
   'output:gen-ai:chat:tool-call': OutputGenAiChatToolCallEvent
   'output:gen-ai:chat:message': OutputGenAiChatMessageEvent
   'output:gen-ai:chat:complete': OutputGenAiChatCompleteEvent
+
+  'companion:event': { event: CompanionEvent }
+  'companion:ack': { ack: CompanionAck }
+  'companion:capabilities': { capabilities: CompanionCapabilities }
 
   /**
    * Spark used for allowing agents in a network to raise an event toward the other destinations (e.g. character).
