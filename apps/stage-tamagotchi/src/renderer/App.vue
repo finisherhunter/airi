@@ -49,7 +49,7 @@ import {
   electronPluginUnload,
 } from '../shared/eventa/plugin/host'
 import { electronPluginToolsChanged } from '../shared/eventa/plugin/tools'
-import { petLiteDefaults } from '../shared/pet-lite-features'
+import { petLiteDefaults, petLiteRuntimeFeatures } from '../shared/pet-lite-features'
 import { initializeElectronAuthCallbackBridge } from './bridges/electron-auth-callback'
 import { initializeStageThreeRuntimeTraceBridge } from './bridges/stage-three-runtime-trace'
 import { useLanguage } from './composables/use-language'
@@ -92,8 +92,6 @@ function createFullStageRuntime() {
   const pluginToolsStore = useTamagotchiPluginToolsStore()
   const stageWindowLifecycleStore = useStageWindowLifecycleStore()
   const settingsAudioDeviceStore = useSettingsAudioDevice()
-  const artistryStore = useArtistryStore()
-  const { activeProvider, artistryGlobals, activeModel, defaultPromptPrefix, providerOptions } = storeToRefs(artistryStore)
   const getServerChannelConfig = useElectronEventaInvoke(electronGetServerChannelConfig)
   const listPlugins = useElectronEventaInvoke(electronPluginList)
   const setPluginEnabled = useElectronEventaInvoke(electronPluginSetEnabled)
@@ -172,17 +170,22 @@ function createFullStageRuntime() {
   })
   void refreshPluginRuntimeTools()
 
-  watch([activeProvider, artistryGlobals, activeModel, defaultPromptPrefix, providerOptions], () => {
-    if (activeProvider.value) {
-      void syncArtistryConfig({
-        provider: activeProvider.value as string,
-        globals: JSON.parse(JSON.stringify(artistryGlobals.value)),
-        model: activeModel.value,
-        promptPrefix: defaultPromptPrefix.value,
-        options: providerOptions.value,
-      })
-    }
-  }, { deep: true, immediate: true })
+  if (petLiteRuntimeFeatures.artistry) {
+    const artistryStore = useArtistryStore()
+    const { activeProvider, artistryGlobals, activeModel, defaultPromptPrefix, providerOptions } = storeToRefs(artistryStore)
+
+    watch([activeProvider, artistryGlobals, activeModel, defaultPromptPrefix, providerOptions], () => {
+      if (activeProvider.value) {
+        void syncArtistryConfig({
+          provider: activeProvider.value as string,
+          globals: JSON.parse(JSON.stringify(artistryGlobals.value)),
+          model: activeModel.value,
+          promptPrefix: defaultPromptPrefix.value,
+          options: providerOptions.value,
+        })
+      }
+    }, { deep: true, immediate: true })
+  }
 
   context.value.on(electronGodotStageStatusChanged, (event) => {
     if (!event.body) {
@@ -204,7 +207,13 @@ function createFullStageRuntime() {
 
       await displayModelsStore.loadDisplayModelsFromIndexedDB()
       await settingsStore.initializeStageModel()
-      await settingsAudioDeviceStore.initialize()
+      if (petLiteRuntimeFeatures.hearing) {
+        await settingsAudioDeviceStore.initialize()
+      }
+      else {
+        settingsAudioDeviceStore.enabled = false
+        settingsAudioDeviceStore.stopStream()
+      }
 
       if (isGodotStageRoute()) {
         try {

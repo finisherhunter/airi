@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isPetLiteSettingsRouteVisible, petLiteDefaults, petLiteFeatures } from './pet-lite-features'
+import { isPetLiteSettingsRouteVisible, petLiteDefaults, petLiteFeatures, petLiteRuntimeFeatures } from './pet-lite-features'
 
 describe('pet lite feature policy', () => {
   it('keeps character and appearance capabilities available', () => {
@@ -16,6 +16,13 @@ describe('pet lite feature policy', () => {
     expect(petLiteDefaults.controlsIslandIconSize).toBe('small')
     expect(petLiteDefaults.analyticsEnabled).toBe(false)
     expect(petLiteDefaults.dark).toBe(false)
+  })
+
+  it('keeps the first backend stop batch reversible and inactive', () => {
+    expect(petLiteRuntimeFeatures.chat).toBe(false)
+    expect(petLiteRuntimeFeatures.hearing).toBe(false)
+    expect(petLiteRuntimeFeatures.spotlight).toBe(false)
+    expect(petLiteRuntimeFeatures.artistry).toBe(false)
   })
 
   it('hides AI platform settings while preserving model and system settings', () => {

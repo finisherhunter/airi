@@ -9,6 +9,19 @@ export const petLiteFeatures = {
   authentication: false,
 } as const
 
+/**
+ * Runtime services disabled for the lightweight pet baseline.
+ *
+ * The source modules remain available so a later Pet feature can restore them
+ * by reconnecting their existing entry points.
+ */
+export const petLiteRuntimeFeatures = {
+  chat: false,
+  hearing: false,
+  spotlight: false,
+  artistry: false,
+} as const
+
 export const petLiteDefaults = {
   language: 'zh-Hans',
   controlsIslandIconSize: 'small',

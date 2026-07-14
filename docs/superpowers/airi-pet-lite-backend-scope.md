@@ -24,16 +24,16 @@
 | 开发者工具 | 系统设置中的开发者入口、Electron DevTools | `apps/stage-tamagotchi/src/renderer/pages/settings/system/developer.vue`、`src/main/windows/devtools/` | 保留 | 入口可以不打扰普通用户，但实现不能删除 |
 | Desktop Overlay | 当前由环境开关控制 | `apps/stage-tamagotchi/src/main/windows/desktop-overlay/` | 待审计 | 本阶段不处理，不能因为暂时不用而移除 |
 | AI 服务商/模型连接 | Provider、连接设置、状态岛 | `packages/stage-ui/src/stores/providers.ts`、`settings/providers/`、`settings/connection/`、`src/main/services/airi/channel-server/` | 隐藏但仍运行 | 当前只关闭普通入口；是否能停止后台服务要单独做运行时审计 |
-| 聊天窗口 | 桌宠聊天控制、聊天窗口 | `src/main/windows/chat/`、聊天相关 stage store | 隐藏但仍运行 | 已从控制区隐藏，源码和依赖暂不删除 |
-| 语音、听觉、语音识别/合成 | 麦克风/听觉控制、模块设置 | `packages/stage-ui/src/stores/modules/speech.ts`、`hearing.ts`、模块设置页 | 隐藏但仍运行 | 需要确认启动时是否初始化、是否与通知或模型加载共享依赖 |
+| 聊天窗口 | 桌宠聊天控制、聊天窗口 | `src/main/windows/chat/`、聊天相关 stage store | 可恢复停用 | 主窗口不再注册打开聊天的 IPC，聊天窗口 provider 保留但不接入启动图 |
+| 语音、听觉、语音识别/合成 | 麦克风/听觉控制、模块设置 | `packages/stage-ui/src/stores/modules/speech.ts`、`hearing.ts`、模块设置页 | 可恢复停用 | Pet Lite 运行时强制关闭旧配置遗留的麦克风状态；源模块仍保留 |
 | 记忆 | 记忆设置和记忆模块 | `settings/memory/`、`packages/stage-ui/src/stores/modules/` 中的 memory 模块 | 隐藏但仍运行 | 先隐藏，后续按启动依赖决定是否停止 |
 | MCP、插件和服务通道 | MCP/插件/连接设置 | `src/main/services/airi/mcp-servers/`、`plugins/`、`channel-server/`、`packages/server-*` | 隐藏但仍运行 | 这些是后台基础设施，不能只根据页面名称删除 |
 | 数据维护/重置 | 数据设置页 | `settings/data/` 及其数据维护组件 | 隐藏但仍运行 | 先避免普通用户误操作，数据目录和重置流程暂不删除 |
 | 通用设置 | 通用设置页 | `packages/stage-pages/src/components/settings-general-fields.vue`、设置 store | 隐藏但仍运行 | Pet Lite 固定为亮色、简体中文、小图标、关闭分析，不向用户暴露无用选项 |
 | 配色方案 | 配色方案页 | `packages/stage-pages/src/pages/settings/system/color-scheme.vue`、`packages/stage-ui/src/stores/settings/theme.ts` | 隐藏但仍运行 | 只调整界面主色相和配色预设，不是亮/暗主题；当前沿用默认配色 |
-| 窗口快捷方式 | Window Shortcuts 页面 | `apps/stage-tamagotchi/src/renderer/pages/settings/system/window-shortcuts.vue`、Spotlight shortcut IPC | 隐藏但仍运行 | 它控制打开 Spotlight/AI 快捷面板的全局快捷键，不控制桌宠窗口置顶、拖拽或隐藏 |
+| 窗口快捷方式 | Window Shortcuts 页面 | `apps/stage-tamagotchi/src/renderer/pages/settings/system/window-shortcuts.vue`、Spotlight shortcut IPC | 可恢复停用 | 全局快捷键服务不再被活动窗口装配；不影响桌宠窗口置顶、拖拽或隐藏 |
 | 登录/账户/Welcome | Welcome、账户入口、认证按钮 | `src/main/windows/onboarding/`、`src/main/services/airi/auth.ts` | 隐藏但仍运行 | Welcome 不再自动弹出；页面和认证代码暂留，未来需要配置 AI 时仍可主动使用 |
-| Artistry、Spotlight、游戏扩展 | Artistry/Spotlight/Discord/X/Minecraft/Factorio 等入口 | `src/main/services/airi/widgets/artistry-bridge.ts`、`src/main/windows/spotlight/`、`packages/stage-ui/src/stores/modules/` | 待审计 | 这些不是 Pet Lite 首要功能，但还未完成逐项运行时依赖审计 |
+| Artistry、Spotlight、游戏扩展 | Artistry/Spotlight/Discord/X/Minecraft/Factorio 等入口 | `src/main/services/airi/widgets/artistry-bridge.ts`、`src/main/windows/spotlight/`、`packages/stage-ui/src/stores/modules/` | 可恢复停用 | Artistry bridge 与 Spotlight 不再初始化；插件宿主保留给开发者工具，不归入本次停用 |
 | 连接状态诊断岛 | 桌宠窗口中的连接状态/Wi-Fi 指示 | `src/renderer/components/stage-islands/status-island/`、channel server | 隐藏但仍运行 | 当前入口已隐藏；后台 channel server 是否可停留待审计 |
 
 ## 当前实际改动的边界
@@ -46,10 +46,17 @@
 - 停止自动打开 Welcome 页面。
 - 设置窗口和 Welcome 窗口默认隐藏 Electron 的 `File / Edit / View / Window` 菜单。
 
+本阶段新增的后台边界：
+
+- 增加 `petLiteRuntimeFeatures` 作为可恢复停用开关。
+- 聊天、Spotlight、全局快捷键和 Artistry bridge 从活动 Electron 装配图断开，源码仍保留。
+- 主页面和 App 启动流程会阻止旧配置重新启用麦克风，并释放已有音频流。
+- 插件宿主继续运行，因为开发者工具的插件检查功能依赖它。
+
 本阶段没有做的事情：
 
 - 没有删除 AI 服务、MCP、插件、聊天窗口或共享 store。
-- 没有停止主进程中的服务初始化。
+- 没有停止 `channel-server`、MCP 或插件宿主的初始化。
 - 没有处理 Desktop Overlay。
 - 没有删除开发者工具、角色模型导入、外观设置或通知。
 
@@ -77,4 +84,4 @@
 
 ## 下一步
 
-当前已将保留模块作为稳定基线。下一阶段开始对隐藏但仍运行的后台做运行时审计，优先处理可能影响启动开销的 `channel-server`、MCP、插件宿主、Spotlight 和 Artistry；先进入“可恢复停用”，不直接删除。角色卡、模型、外观、通知、开发者工具和 Desktop Overlay 不进入裁剪批次。
+当前已将保留模块作为稳定基线。第一批可恢复停用已经落地。下一阶段审计可能影响启动开销的 `channel-server`、MCP 和数据/认证共享依赖；角色卡、模型、外观、通知、开发者工具和 Desktop Overlay 不进入裁剪批次。

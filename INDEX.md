@@ -11,7 +11,8 @@
 - 开发者工具
 - Desktop Overlay 暂不处理
 
-普通用户入口已隐藏但后台暂未删除：聊天、听觉/语音、认证、Provider、Modules、Memory、Connection、Data、通用设置、配色方案和窗口快捷方式。`隐藏但仍运行` 不等于 `已移除`。
+普通用户入口已隐藏但后台暂未删除：认证、Provider、Modules、Memory、Connection、Data、通用设置和配色方案。
+第一批后台已进入 `可恢复停用`：聊天、麦克风听觉输入、Spotlight/全局快捷键和 Artistry bridge。插件宿主仍运行，因为开发者工具依赖它。所有源码和依赖仍保留。
 
 ## 先看这些文件
 

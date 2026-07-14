@@ -20,6 +20,7 @@ import { isLinux } from 'std-env'
 
 import icon from '../../resources/icon.png?asset'
 
+import { petLiteRuntimeFeatures } from '../shared/pet-lite-features'
 import { openDebugger, setupDebugger } from './app/debugger'
 import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
 import { installSingleInstanceGuard } from './app/single-instance'
@@ -212,8 +213,12 @@ app.whenReady().then(async () => {
     build: ({ dependsOn }) => setupSpotlightWindowManager(dependsOn),
   })
 
+  // Keep the original provider chain available for restoration without
+  // connecting Spotlight to any active Pet Lite window.
+  void spotlightWindow
+
   const settingsWindow = injeca.provide('windows:settings', {
-    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, mcpStdioManager, i18n, windowAuthManager, globalShortcut, spotlightWindow },
+    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, mcpStdioManager, i18n, windowAuthManager },
     build: async ({ dependsOn }) =>
       setupSettingsWindowReusableFunc({
         ...dependsOn,
@@ -222,7 +227,7 @@ app.whenReady().then(async () => {
   })
 
   const mainWindow = injeca.provide('windows:main', {
-    dependsOn: { settingsWindow, chatWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, godotStageManager, mcpStdioManager, i18n, onboardingWindowManager, windowAuthManager },
+    dependsOn: { settingsWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, godotStageManager, mcpStdioManager, i18n, onboardingWindowManager, windowAuthManager },
     build: async ({ dependsOn }) => setupMainWindow({
       ...dependsOn,
       onWindowCreated: (window) => {
@@ -257,16 +262,25 @@ app.whenReady().then(async () => {
     })
   }
 
+  if (petLiteRuntimeFeatures.artistry) {
+    injeca.invoke({
+      dependsOn: { widgetsWindow: widgetsManager, artistryConfig },
+      callback: async (deps) => {
+        const { context } = createContext(ipcMain)
+        await setupArtistryBridge({
+          widgetsManager: deps.widgetsWindow,
+          context,
+          artistryConfig: deps.artistryConfig,
+        })
+      },
+    })
+  }
+
+  // Pet Lite keeps the original providers available for restoration, but only
+  // the retained application roots are connected to the startup graph.
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig },
-    callback: async (deps) => {
-      const { context } = createContext(ipcMain)
-      await setupArtistryBridge({
-        widgetsManager: deps.widgetsWindow,
-        context,
-        artistryConfig: deps.artistryConfig,
-      })
-    },
+    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
+    callback: noop,
   })
 
   injeca.start().catch(err => console.error(err))

@@ -36,7 +36,7 @@ import ResourceStatusIsland from '../components/stage-islands/resource-status-is
 import StatusIsland from '../components/stage-islands/status-island/index.vue'
 
 import { modelSettingsRuntimeSnapshotChannelName } from '../../shared/model-settings-runtime'
-import { petLiteFeatures } from '../../shared/pet-lite-features'
+import { petLiteFeatures, petLiteRuntimeFeatures } from '../../shared/pet-lite-features'
 import { useChatSyncStore } from '../stores/chat-sync'
 import { useControlsIslandStore } from '../stores/controls-island'
 import { useStageWindowLifecycleStore } from '../stores/stage-window-lifecycle'
@@ -247,6 +247,10 @@ watch(modelSettingsRuntimeChannelEvent, (event) => {
 const settingsAudioDeviceStore = useSettingsAudioDevice()
 const { stream, enabled } = storeToRefs(settingsAudioDeviceStore)
 const { askPermission, startStream, stopStream } = settingsAudioDeviceStore
+if (!petLiteRuntimeFeatures.hearing) {
+  enabled.value = false
+  stopStream()
+}
 const { nowSpeaking } = storeToRefs(useSpeakingStore())
 const hearingStore = useHearingStore()
 const { activeTranscriptionModel, activeTranscriptionProvider } = storeToRefs(hearingStore)
@@ -552,6 +556,13 @@ async function stopAudioInteractionConsumers(options: StopAudioInteractionOption
 
 watch(enabled, async (val) => {
   try {
+    if (!petLiteRuntimeFeatures.hearing) {
+      enabled.value = false
+      stopStream()
+      await voiceInputInteractionLifecycle.stop({ flushTranscript: false })
+      return
+    }
+
     if (val) {
       await askPermission()
       await voiceInputInteractionLifecycle.start()

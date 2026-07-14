@@ -4,7 +4,7 @@
 
 **Goal:** Close the first-phase AI platform entry points in the AIRI derivative while preserving character import/switching, all appearance settings, notifications, and developer tools.
 
-**Architecture:** Add one small Pet Lite feature policy at the Tamagotchi app boundary. Use it to filter ordinary settings entries and hide chat/voice/auth controls. Do not remove AIRI shared stores, Electron windows, Desktop Overlay, or developer tooling in this phase; runtime service trimming is a separate follow-up after the visible boundary is verified.
+**Architecture:** Add one small Pet Lite feature policy at the Tamagotchi app boundary. Use it to filter ordinary settings entries, hide chat/voice/auth controls, and disconnect the first low-risk backend services from the active Electron dependency graph. Do not remove AIRI shared stores, source windows, Desktop Overlay, or developer tooling; every stopped service remains available for restoration.
 
 **Tech Stack:** Electron, Vue 3, TypeScript, Vue Router, Vitest, pnpm.
 
@@ -157,10 +157,28 @@ Expected: all commands exit `0`.
 
 Confirm that character import/switching, scene/theme/appearance settings, window controls, notifications, and developer tools remain reachable. Confirm that chat, voice/hearing, authentication, provider, module, memory, connection, and data-maintenance entries are not shown on the normal settings landing page.
 
-- [x] **Step 3: Record the result without claiming runtime trimming**
+- [x] **Step 3: Record the visible boundary and the runtime boundary**
 
-Record the exact commands and visible results in `.Codex-tmp/pet-lite-scope-verification.md`. Explicitly note that shared AI services remain initialized until the separate runtime-trimming plan.
+Record the exact commands and visible results in `.Codex-tmp/pet-lite-scope-verification.md`. Explicitly note which shared AI services remain initialized.
+
+### Task 5: First Reversible Runtime Stop Batch
+
+**Files:**
+- Modify: `apps/stage-tamagotchi/src/main/index.ts`
+- Modify: `apps/stage-tamagotchi/src/main/windows/main/`
+- Modify: `apps/stage-tamagotchi/src/main/windows/settings/`
+- Modify: `apps/stage-tamagotchi/src/renderer/App.vue`
+- Modify: `apps/stage-tamagotchi/src/renderer/pages/index.vue`
+- Modify: `apps/stage-tamagotchi/src/shared/pet-lite-features.ts`
+- Modify: `docs/superpowers/airi-pet-lite-backend-scope.md`
+
+- [x] Disconnect the chat window and its main-window IPC handler from the active graph.
+- [x] Disconnect Spotlight and the global-shortcut service from active settings/window startup.
+- [x] Gate Artistry bridge initialization; keep the plugin host because developer tools depend on it.
+- [x] Force legacy persisted microphone state off and stop any existing stream when hearing is disabled.
+- [x] Keep the original providers and source modules for restoration; do not classify them as removed.
+- [x] Verify with the focused policy test, typecheck, and Electron build.
 
 ## Follow-up Boundary
 
-After this plan passes, create a separate runtime-trimming plan based on actual import and process evidence. That plan may stop AI services one group at a time, but it must not touch Desktop Overlay or the preserved character/appearance/notification/developer paths without a new review.
+The next phase is to audit `channel-server`, MCP and data/auth shared dependencies. It may stop one service group at a time, but it must not touch Desktop Overlay or the preserved character/appearance/notification/developer paths without a new review.

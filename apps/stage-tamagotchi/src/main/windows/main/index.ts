@@ -51,7 +51,6 @@ type AppConfig = InferOutput<typeof appConfigSchema>
 
 export async function setupMainWindow(params: {
   settingsWindow: SettingsWindowManager
-  chatWindow: () => Promise<BrowserWindow>
   widgetsManager: WidgetsWindowManager
   noticeWindow: NoticeWindowManager
   autoUpdater: AutoUpdater
@@ -179,7 +178,6 @@ export async function setupMainWindow(params: {
   await setupMainWindowElectronInvokes({
     window,
     settingsWindow: params.settingsWindow,
-    chatWindow: params.chatWindow,
     widgetsManager: params.widgetsManager,
     noticeWindow: params.noticeWindow,
     autoUpdater: params.autoUpdater,
