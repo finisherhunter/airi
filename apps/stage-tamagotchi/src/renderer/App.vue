@@ -88,7 +88,7 @@ function createFullStageRuntime() {
   const analyticsStore = useSharedAnalyticsStore()
   const inferencePreload = useInferencePreload()
   const pluginHostInspectorStore = usePluginHostInspectorStore()
-  const mcpToolsStore = useTamagotchiMcpToolsStore()
+  const mcpToolsStore = petLiteRuntimeFeatures.mcp ? useTamagotchiMcpToolsStore() : undefined
   const pluginToolsStore = useTamagotchiPluginToolsStore()
   const stageWindowLifecycleStore = useStageWindowLifecycleStore()
   const settingsAudioDeviceStore = useSettingsAudioDevice()
@@ -165,9 +165,11 @@ function createFullStageRuntime() {
 
   // NOTICE: Runtime tool stores must register during setup so renderer consumers can see them
   // before `onMounted()` finishes the rest of the startup flow.
-  void mcpToolsStore.refresh().catch((error) => {
-    console.warn('[App] Failed to refresh MCP runtime tools:', error)
-  })
+  if (mcpToolsStore) {
+    void mcpToolsStore.refresh().catch((error) => {
+      console.warn('[App] Failed to refresh MCP runtime tools:', error)
+    })
+  }
   void refreshPluginRuntimeTools()
 
   if (petLiteRuntimeFeatures.artistry) {
@@ -258,7 +260,7 @@ function createFullStageRuntime() {
     dispose() {
       if (!isAuxiliaryChatRoute)
         contextBridgeStore.dispose()
-      mcpToolsStore.dispose()
+      mcpToolsStore?.dispose()
       pluginToolsStore.dispose()
     },
   }

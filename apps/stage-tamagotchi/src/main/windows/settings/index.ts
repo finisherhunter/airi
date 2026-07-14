@@ -33,7 +33,7 @@ export function setupSettingsWindowReusableFunc(params: {
   onWindowCreated?: (window: BrowserWindow) => void
   serverChannel: ServerChannel
   godotStageManager: GodotStageManager
-  mcpStdioManager: McpStdioManager
+  mcpStdioManager?: McpStdioManager
   i18n: I18n
   windowAuthManager: WindowAuthManager
 }): SettingsWindowManager {

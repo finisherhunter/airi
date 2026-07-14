@@ -168,6 +168,9 @@ app.whenReady().then(async () => {
   const mcpStdioManager = injeca.provide('modules:mcp-stdio-manager', {
     build: async () => setupMcpStdioManager(),
   })
+  // Keep the MCP provider available for restoration, but do not connect it to
+  // the Pet Lite startup graph while the runtime feature is disabled.
+  void mcpStdioManager
 
   const widgetsManager = injeca.provide('windows:widgets', {
     dependsOn: { serverChannel, i18n },
@@ -218,7 +221,7 @@ app.whenReady().then(async () => {
   void spotlightWindow
 
   const settingsWindow = injeca.provide('windows:settings', {
-    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, mcpStdioManager, i18n, windowAuthManager },
+    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, i18n, windowAuthManager },
     build: async ({ dependsOn }) =>
       setupSettingsWindowReusableFunc({
         ...dependsOn,
@@ -227,7 +230,7 @@ app.whenReady().then(async () => {
   })
 
   const mainWindow = injeca.provide('windows:main', {
-    dependsOn: { settingsWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, godotStageManager, mcpStdioManager, i18n, onboardingWindowManager, windowAuthManager },
+    dependsOn: { settingsWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, godotStageManager, i18n, onboardingWindowManager, windowAuthManager },
     build: async ({ dependsOn }) => setupMainWindow({
       ...dependsOn,
       onWindowCreated: (window) => {
@@ -279,7 +282,7 @@ app.whenReady().then(async () => {
   // Pet Lite keeps the original providers available for restoration, but only
   // the retained application roots are connected to the startup graph.
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
+    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
     callback: noop,
   })
 

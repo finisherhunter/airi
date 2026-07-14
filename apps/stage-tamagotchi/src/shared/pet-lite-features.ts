@@ -20,6 +20,7 @@ export const petLiteRuntimeFeatures = {
   hearing: false,
   spotlight: false,
   artistry: false,
+  mcp: false,
 } as const
 
 export const petLiteDefaults = {

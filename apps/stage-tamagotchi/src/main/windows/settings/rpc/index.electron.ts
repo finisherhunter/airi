@@ -34,7 +34,7 @@ export async function setupSettingsWindowInvokes(params: {
   getMainWindow?: () => BrowserWindow | undefined
   serverChannel: ServerChannel
   godotStageManager: GodotStageManager
-  mcpStdioManager: McpStdioManager
+  mcpStdioManager?: McpStdioManager
   i18n: I18n
   windowAuthManager: WindowAuthManager
 }) {
@@ -49,7 +49,9 @@ export async function setupSettingsWindowInvokes(params: {
 
   createWidgetsService({ context, widgetsManager: params.widgetsManager, window: params.settingsWindow })
   createAutoUpdaterService({ context, window: params.settingsWindow, service: params.autoUpdater })
-  createMcpServersService({ context, manager: params.mcpStdioManager })
+  if (params.mcpStdioManager) {
+    createMcpServersService({ context, manager: params.mcpStdioManager })
+  }
   createGodotStageService({ context, manager: params.godotStageManager, window: params.settingsWindow })
   createAuthService({ context, window: params.settingsWindow, windowAuthManager: params.windowAuthManager })
 

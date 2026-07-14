@@ -57,7 +57,7 @@ export async function setupMainWindow(params: {
   onWindowCreated?: (window: BrowserWindow) => void
   serverChannel: ServerChannel
   godotStageManager: GodotStageManager
-  mcpStdioManager: McpStdioManager
+  mcpStdioManager?: McpStdioManager
   i18n: I18n
   onboardingWindowManager: OnboardingWindowManager
   windowAuthManager: WindowAuthManager

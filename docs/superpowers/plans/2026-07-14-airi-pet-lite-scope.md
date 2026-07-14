@@ -179,6 +179,36 @@ Record the exact commands and visible results in `.Codex-tmp/pet-lite-scope-veri
 - [x] Keep the original providers and source modules for restoration; do not classify them as removed.
 - [x] Verify with the focused policy test, typecheck, and Electron build.
 
+### Task 6: Audit Shared Backend Dependencies
+
+**Files:**
+- Modify: `docs/superpowers/airi-pet-lite-backend-scope.md`
+- Modify: `INDEX.md`
+- Create: `.Codex-tmp/pet-lite-backend-audit-2026-07-14.md`
+
+- [x] Confirm `channel-server` startup, shutdown, and shared consumers.
+- [x] Confirm MCP manager child-process behavior and cleanup boundary.
+- [x] Confirm authentication network lifecycle.
+- [x] Confirm data maintenance has no resident backend service.
+- [x] Keep all four modules running for now; do not start a second stop batch without a separate implementation decision.
+
+### Task 7: Second Reversible Runtime Stop Batch
+
+**Files:**
+- Modify: `apps/stage-tamagotchi/src/shared/pet-lite-features.ts`
+- Modify: `apps/stage-tamagotchi/src/main/index.ts`
+- Modify: `apps/stage-tamagotchi/src/main/windows/main/`
+- Modify: `apps/stage-tamagotchi/src/main/windows/settings/`
+- Modify: `apps/stage-tamagotchi/src/renderer/App.vue`
+- Modify: `docs/superpowers/airi-pet-lite-backend-scope.md`
+
+- [x] Add the reversible `mcp` runtime policy flag and test it as inactive.
+- [x] Disconnect the MCP provider from the active root dependency graph.
+- [x] Stop registering MCP IPC handlers in the main and settings windows while disabled.
+- [x] Stop refreshing MCP tools in the renderer while disabled.
+- [x] Keep MCP source, settings route, and restoration inputs intact.
+- [x] Verify with the policy test, typecheck, and Electron build.
+
 ## Follow-up Boundary
 
-The next phase is to audit `channel-server`, MCP and data/auth shared dependencies. It may stop one service group at a time, but it must not touch Desktop Overlay or the preserved character/appearance/notification/developer paths without a new review.
+The next phase must evaluate whether the retained plugin host and window base IPC can be separated from `channel-server`. It must not touch Desktop Overlay or the preserved character/appearance/notification/developer paths without a new review.

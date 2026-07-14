@@ -23,6 +23,7 @@ describe('pet lite feature policy', () => {
     expect(petLiteRuntimeFeatures.hearing).toBe(false)
     expect(petLiteRuntimeFeatures.spotlight).toBe(false)
     expect(petLiteRuntimeFeatures.artistry).toBe(false)
+    expect(petLiteRuntimeFeatures.mcp).toBe(false)
   })
 
   it('hides AI platform settings while preserving model and system settings', () => {

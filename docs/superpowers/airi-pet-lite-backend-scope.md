@@ -23,18 +23,18 @@
 | 通知与确认窗口 | 通知/确认弹窗 | `apps/stage-tamagotchi/src/main/windows/notice/` | 保留 | 后续操作反馈仍然需要 |
 | 开发者工具 | 系统设置中的开发者入口、Electron DevTools | `apps/stage-tamagotchi/src/renderer/pages/settings/system/developer.vue`、`src/main/windows/devtools/` | 保留 | 入口可以不打扰普通用户，但实现不能删除 |
 | Desktop Overlay | 当前由环境开关控制 | `apps/stage-tamagotchi/src/main/windows/desktop-overlay/` | 待审计 | 本阶段不处理，不能因为暂时不用而移除 |
-| AI 服务商/模型连接 | Provider、连接设置、状态岛 | `packages/stage-ui/src/stores/providers.ts`、`settings/providers/`、`settings/connection/`、`src/main/services/airi/channel-server/` | 隐藏但仍运行 | 当前只关闭普通入口；是否能停止后台服务要单独做运行时审计 |
+| AI 服务商/模型连接 | Provider、连接设置、状态岛 | `packages/stage-ui/src/stores/providers.ts`、`settings/providers/`、`settings/connection/`、`src/main/services/airi/channel-server/` | 隐藏但仍运行 | 当前只关闭普通入口；channel-server 是窗口基础 IPC、插件宿主和连接状态共享依赖，暂不裁剪 |
 | 聊天窗口 | 桌宠聊天控制、聊天窗口 | `src/main/windows/chat/`、聊天相关 stage store | 可恢复停用 | 主窗口不再注册打开聊天的 IPC，聊天窗口 provider 保留但不接入启动图 |
 | 语音、听觉、语音识别/合成 | 麦克风/听觉控制、模块设置 | `packages/stage-ui/src/stores/modules/speech.ts`、`hearing.ts`、模块设置页 | 可恢复停用 | Pet Lite 运行时强制关闭旧配置遗留的麦克风状态；源模块仍保留 |
 | 记忆 | 记忆设置和记忆模块 | `settings/memory/`、`packages/stage-ui/src/stores/modules/` 中的 memory 模块 | 隐藏但仍运行 | 先隐藏，后续按启动依赖决定是否停止 |
-| MCP、插件和服务通道 | MCP/插件/连接设置 | `src/main/services/airi/mcp-servers/`、`plugins/`、`channel-server/`、`packages/server-*` | 隐藏但仍运行 | 这些是后台基础设施，不能只根据页面名称删除 |
-| 数据维护/重置 | 数据设置页 | `settings/data/` 及其数据维护组件 | 隐藏但仍运行 | 先避免普通用户误操作，数据目录和重置流程暂不删除 |
+| MCP、插件和服务通道 | MCP/插件/连接设置 | `src/main/services/airi/mcp-servers/`、`plugins/`、`channel-server/`、`packages/server-*` | 可恢复停用 | MCP 管理器已从 Pet Lite 活动启动图和主/设置窗口 IPC 断开；插件宿主和窗口基础 IPC 仍依赖 channel-server |
+| 数据维护/重置 | 数据设置页 | `settings/data/` 及其数据维护组件 | 隐藏但仍运行 | 只在数据设置页主动执行本地存储/文件清理，没有后台常驻服务，暂不删除 |
 | 通用设置 | 通用设置页 | `packages/stage-pages/src/components/settings-general-fields.vue`、设置 store | 隐藏但仍运行 | Pet Lite 固定为亮色、简体中文、小图标、关闭分析，不向用户暴露无用选项 |
 | 配色方案 | 配色方案页 | `packages/stage-pages/src/pages/settings/system/color-scheme.vue`、`packages/stage-ui/src/stores/settings/theme.ts` | 隐藏但仍运行 | 只调整界面主色相和配色预设，不是亮/暗主题；当前沿用默认配色 |
 | 窗口快捷方式 | Window Shortcuts 页面 | `apps/stage-tamagotchi/src/renderer/pages/settings/system/window-shortcuts.vue`、Spotlight shortcut IPC | 可恢复停用 | 全局快捷键服务不再被活动窗口装配；不影响桌宠窗口置顶、拖拽或隐藏 |
-| 登录/账户/Welcome | Welcome、账户入口、认证按钮 | `src/main/windows/onboarding/`、`src/main/services/airi/auth.ts` | 隐藏但仍运行 | Welcome 不再自动弹出；页面和认证代码暂留，未来需要配置 AI 时仍可主动使用 |
+| 登录/账户/Welcome | Welcome、账户入口、认证按钮 | `src/main/windows/onboarding/`、`src/main/services/airi/auth.ts` | 隐藏但仍运行 | Welcome 不再自动弹出；认证只在用户主动登录时启动回环服务，页面和代码暂留 |
 | Artistry、Spotlight、游戏扩展 | Artistry/Spotlight/Discord/X/Minecraft/Factorio 等入口 | `src/main/services/airi/widgets/artistry-bridge.ts`、`src/main/windows/spotlight/`、`packages/stage-ui/src/stores/modules/` | 可恢复停用 | Artistry bridge 与 Spotlight 不再初始化；插件宿主保留给开发者工具，不归入本次停用 |
-| 连接状态诊断岛 | 桌宠窗口中的连接状态/Wi-Fi 指示 | `src/renderer/components/stage-islands/status-island/`、channel server | 隐藏但仍运行 | 当前入口已隐藏；后台 channel server 是否可停留待审计 |
+| 连接状态诊断岛 | 桌宠窗口中的连接状态/Wi-Fi 指示 | `src/renderer/components/stage-islands/status-island/`、channel server | 隐藏但仍运行 | 当前入口已隐藏；channel-server 本体仍作为共享基础设施运行 |
 
 ## 当前实际改动的边界
 
@@ -52,11 +52,12 @@
 - 聊天、Spotlight、全局快捷键和 Artistry bridge 从活动 Electron 装配图断开，源码仍保留。
 - 主页面和 App 启动流程会阻止旧配置重新启用麦克风，并释放已有音频流。
 - 插件宿主继续运行，因为开发者工具的插件检查功能依赖它。
+- MCP 管理器不再进入 Pet Lite 根启动图，主/设置窗口不再注册 MCP IPC，渲染器也不再刷新 MCP 工具；源码和设置页保留。
 
 本阶段没有做的事情：
 
 - 没有删除 AI 服务、MCP、插件、聊天窗口或共享 store。
-- 没有停止 `channel-server`、MCP 或插件宿主的初始化。
+- 没有停止 `channel-server` 或插件宿主的初始化；MCP 管理器已停止初始化。
 - 没有处理 Desktop Overlay。
 - 没有删除开发者工具、角色模型导入、外观设置或通知。
 
@@ -70,6 +71,17 @@
 4. 停止后通过类型检查、测试和真实 Electron 启动验证。
 
 只有完成以上四项，状态才能从“隐藏但仍运行”或“待审计”改成“确认移除”。目前没有任何模块达到“确认移除”。
+
+## 2026-07-14 共享后台审计结论
+
+本次只做代码审计，没有停用第二批模块：
+
+- `channel-server` 在 `setupServerChannel()` 中注册应用启动/停止钩子，并默认监听 `127.0.0.1:6121`。窗口基础 IPC 会注册它的配置处理器，插件宿主、连接状态和多个窗口也复用同一个服务；现在不能仅因为连接设置被隐藏就停止它。
+- MCP 管理器默认不会自动启动外部 MCP 子进程；本次已进一步将它从 Pet Lite 根启动图、主/设置窗口 IPC 和渲染器工具刷新边界断开。源码和设置页仍保留，恢复时重新接回对应窗口依赖即可。
+- 认证管理器只维护窗口回调上下文。真正的网络登录发生在用户主动登录时，届时才启动回环回调服务；退出登录会关闭回环服务，没有发现常驻网络任务。
+- 数据维护由设置页触发，负责本地应用数据、聊天会话或桌面状态的导入、删除和重置，没有独立的后台常驻服务。保留它不会增加桌宠空闲运行负担。
+
+因此第二批只停用了 MCP 管理器；`channel-server`、认证和数据维护仍保持原状。后续若要继续减负，必须先把插件宿主、窗口基础 IPC 和连接状态迁移到明确的可选依赖后再考虑 channel-server。
 
 ## 可恢复性规则
 
