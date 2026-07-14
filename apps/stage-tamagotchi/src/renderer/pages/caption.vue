@@ -2,10 +2,15 @@
 import { defineInvoke } from '@moeru/eventa'
 import { useElectronEventaContext, useElectronMouseAroundWindowBorder, useElectronMouseInWindow } from '@proj-airi/electron-vueuse'
 import { createFadeAnimator, PoppinText } from '@proj-airi/stage-ui/components'
+import { useSettings } from '@proj-airi/stage-ui/stores/settings'
+import { useLive2dParams } from '@proj-airi/stage-ui-live2d'
 import { refDebounced, useBroadcastChannel } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { captionGetIsFollowingWindow, captionIsFollowingWindowChanged } from '../../shared/eventa'
+import type { CaptionChannelEvent } from '../../shared/eventa'
+
+import { captionGetIsFollowingWindow, captionIsFollowingWindowChanged, companionReactionRequested } from '../../shared/eventa'
+import { createCompanionReactionHandler } from '../composables/companion-reaction'
 import { useCaptionItems } from '../composables/useCaptionItems'
 
 /** Keep stale captions from lingering after the last broadcast update. */
@@ -20,10 +25,10 @@ const shouldFadeOnCursorWithin = computed(() => !isOutsideWindowFor250Ms.value)
 const { isNearAnyBorder: isAroundWindowBorder } = useElectronMouseAroundWindowBorder({ threshold: 30 })
 const isAroundWindowBorderFor250Ms = refDebounced(isAroundWindowBorder, 250)
 
-// Broadcast channel for captions
-type CaptionChannelEvent = | { type: 'caption-speaker', text: string } | { type: 'caption-assistant', text: string }
 const { data } = useBroadcastChannel<CaptionChannelEvent, CaptionChannelEvent>({ name: 'airi-caption-overlay' })
 const { items: captionItems, add: addCaptionItem, dispose: disposeCaptionItems } = useCaptionItems({ ttlMs: CAPTION_TEXT_EXPIRY_MS })
+const settingsStore = useSettings()
+const live2dStore = useLive2dParams()
 
 const context = useElectronEventaContext()
 const getAttached = defineInvoke(context.value, captionGetIsFollowingWindow)
@@ -31,11 +36,13 @@ const getAttached = defineInvoke(context.value, captionGetIsFollowingWindow)
 const captionAnimatorByType = {
   'caption-speaker': createFadeAnimator({ duration: 180 }),
   'caption-assistant': createFadeAnimator({ duration: 180 }),
+  'caption-companion': createFadeAnimator({ duration: 180 }),
 } satisfies Record<CaptionChannelEvent['type'], ReturnType<typeof createFadeAnimator>>
 
 const captionTypes = [
   'caption-speaker',
   'caption-assistant',
+  'caption-companion',
 ] satisfies CaptionChannelEvent['type'][]
 
 function toCaptionTextSegments(type: CaptionChannelEvent['type']) {
@@ -50,7 +57,15 @@ function toCaptionTextSegments(type: CaptionChannelEvent['type']) {
 const captionTextByType = computed(() => ({
   'caption-speaker': toCaptionTextSegments('caption-speaker'),
   'caption-assistant': toCaptionTextSegments('caption-assistant'),
+  'caption-companion': toCaptionTextSegments('caption-companion'),
 }))
+
+const handleCompanionReaction = createCompanionReactionHandler({
+  getRenderer: () => settingsStore.stageModelRenderer,
+  hasMotionProfile: () => settingsStore.stageModelSelected === 'preset-live2d-1',
+  postCaption: event => postCaption(event),
+  setMotion: motion => live2dStore.currentMotion = motion,
+})
 
 onMounted(async () => {
   try {
@@ -67,16 +82,19 @@ onMounted(async () => {
   catch {}
 
   try {
+    context.value.on(companionReactionRequested, (event) => {
+      if (event.body)
+        handleCompanionReaction(event.body)
+    })
+  }
+  catch {}
+
+  try {
     // Update texts from broadcast channel
     watch(data, (event) => {
       if (!event)
         return
-      if (event.type === 'caption-speaker') {
-        addCaptionItem(event)
-      }
-      else if (event.type === 'caption-assistant') {
-        addCaptionItem(event)
-      }
+      addCaptionItem(event)
     }, { immediate: true })
   }
   catch {}
@@ -112,13 +130,14 @@ onUnmounted(() => {
           :class="[
             type === 'caption-speaker' ? 'rounded-md px-2 py-1 text-[1.1rem] text-neutral-50 font-medium text-shadow-lg text-shadow-color-neutral-900/60' : '',
             type === 'caption-assistant' ? 'rounded-md px-2 py-1 text-[1.35rem] text-primary-50 font-semibold text-stroke-4 text-stroke-primary-300/50 text-shadow-lg text-shadow-color-primary-700/50' : '',
+            type === 'caption-companion' ? 'rounded-md px-2 py-1 text-[1.2rem] text-neutral-50 font-semibold text-shadow-lg text-shadow-color-primary-700/50' : '',
           ]"
           :style="type === 'caption-assistant' ? { paintOrder: 'stroke fill' } : undefined"
         >
           <PoppinText
             :text="captionTextByType[type]"
             :animator="captionAnimatorByType[type]"
-            :text-class="type === 'caption-assistant' ? 'color-neutral-50! align-middle' : type === 'caption-speaker' ? 'color-neutral-50! align-middle' : ''"
+            :text-class="type === 'caption-assistant' || type === 'caption-companion' ? 'color-neutral-50! align-middle' : type === 'caption-speaker' ? 'color-neutral-50! align-middle' : ''"
           />
         </div>
       </div>

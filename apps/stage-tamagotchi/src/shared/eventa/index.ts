@@ -30,6 +30,23 @@ import type { Rectangle } from 'electron'
 
 import { defineEventa, defineInvokeEventa } from '@moeru/eventa'
 
+export type CaptionChannelEvent
+  = | { type: 'caption-speaker', text: string }
+    | { type: 'caption-assistant', text: string }
+    | { type: 'caption-companion', text: string }
+
+export type CompanionReactionMotion = 'none' | 'random' | 'semantic'
+export type CompanionReactionSemantic = 'neutral' | 'happy' | 'sad'
+
+export interface CompanionReactionRequest {
+  text: string
+  showCaption: boolean
+  motion: CompanionReactionMotion
+  semantic?: CompanionReactionSemantic
+}
+
+export const companionReactionRequested = defineEventa<CompanionReactionRequest>('eventa:event:electron:companion:reaction-requested')
+
 export const electronStartTrackMousePosition = defineInvokeEventa('eventa:invoke:electron:start-tracking-mouse-position')
 export const electronStartDraggingWindow = defineInvokeEventa('eventa:invoke:electron:start-dragging-window')
 
