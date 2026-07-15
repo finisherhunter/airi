@@ -18,6 +18,9 @@
 
 - Caption 窗口使用最小运行时，不初始化聊天会话和完整舞台运行时。
 - `inferencePreload` 随关闭的 chat/hearing 能力停用。
+- chat/hearing 都关闭时，跳过聊天 session store 的创建和初始化；chat/hearing 任一开启时保留原有恢复路径。
+- 字幕跟随关闭、隐藏或销毁时会取消 trailing 位置任务；重复开启跟随不会重复注册主窗口监听器，显示后会恢复跟随。
+- 已审计 Godot 关闭态：manager 构造本身不启动 Godot，只保留状态/RPC/残留进程清理能力；简单 gated 会破坏设置页和恢复入口，因此本批次不改。
 - 已完成 workspace 依赖声明、类型检查、生产构建和测试恢复。
 - 当前没有足够证据删除模型、字体、Live2D/VRM、DuckDB WASM、ONNX 或开发者工具相关依赖。
 
@@ -83,3 +86,13 @@
 3. 再次执行 typecheck、build、Vitest 和开发版启动验收。
 4. 生成第一个可用 Windows 包并记录基线指标。
 5. 以基线为依据进行依赖和性能优化，不在首包前进行猜测式删包。
+
+## 2026-07-15 打包前验收记录
+
+- `corepack pnpm -F @proj-airi/stage-tamagotchi typecheck`：通过。
+- `corepack pnpm -F @proj-airi/stage-tamagotchi build`：通过；构建约 3 分钟。保留已有插件耗时、DuckDB browser externalize、UnoCSS unmatched utility 和 `inlineDynamicImports` 弃用警告，均未导致失败。
+- 本次新增/相关 focused tests：2 个文件、12 个测试通过。
+- 桌宠配置范围测试：排除既有 `src/main/services/airi/plugins/index.test.ts` 后，60 个测试文件、354 个测试通过、1 个跳过。
+- 完整桌宠测试仍有 1 个既有失败：插件自动重载测试在 Windows 临时配置文件 rename 处出现 `EPERM`，随后 `afterSessionId` 为空；单独重跑仍可复现。本批次未修改插件持久化逻辑，首个 Windows 包前需要单独处理或明确豁免它。
+- 全仓 Vitest 还会触发与本桌宠批次无关的 cap-vite 跨平台路径/终端测试、plugin-sdk 路径断言和 server 数据库 hook 超时；不纳入本批次改动。
+- 定向 lint（本批次触碰的 5 个文件）：通过。全包 lint 仍有既有 Companion Bridge、channel-server、依赖排序等问题，未在本批次扩展修复范围。

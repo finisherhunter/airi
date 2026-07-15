@@ -5,8 +5,10 @@ const chatSyncStoreMock = vi.hoisted(() => ({
   initialize: vi.fn(),
 }))
 
+const useChatSyncStoreMock = vi.hoisted(() => vi.fn(() => chatSyncStoreMock))
+
 vi.mock('./chat-sync', () => ({
-  useChatSyncStore: () => chatSyncStoreMock,
+  useChatSyncStore: useChatSyncStoreMock,
 }))
 
 describe('createChatSyncWindowLifecycle', async () => {
@@ -18,6 +20,7 @@ describe('createChatSyncWindowLifecycle', async () => {
   beforeEach(() => {
     chatSyncStoreMock.dispose.mockClear()
     chatSyncStoreMock.initialize.mockClear()
+    useChatSyncStoreMock.mockClear()
   })
 
   it('issue #1743: keeps main window chat sync owned by the renderer root', () => {
@@ -50,6 +53,25 @@ describe('createChatSyncWindowLifecycle', async () => {
 
     expect(chatSyncStoreMock.initialize).toHaveBeenCalledWith('follower')
     expect(chatSyncStoreMock.dispose).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips chat sync store setup when the chat runtime is disabled', () => {
+    // ROOT CAUSE:
+    //
+    // App.vue used to obtain and initialize the chat sync store for every
+    // main-window startup, even when both chat and hearing were disabled.
+    // That assembled the chat store graph before any chat-capable path existed.
+    //
+    // The lifecycle now gates store creation while keeping its default enabled
+    // behavior for restored chat/hearing runtimes.
+    const lifecycle = createChatSyncWindowLifecycle('/', '', false)
+
+    lifecycle.initialize()
+    lifecycle.dispose()
+
+    expect(useChatSyncStoreMock).not.toHaveBeenCalled()
+    expect(chatSyncStoreMock.initialize).not.toHaveBeenCalled()
+    expect(chatSyncStoreMock.dispose).not.toHaveBeenCalled()
   })
 
   it('does not initialize chat sync for unrelated windows', () => {

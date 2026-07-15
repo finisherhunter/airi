@@ -1,6 +1,7 @@
 import type { BrowserWindow, BrowserWindowConstructorOptions, Rectangle } from 'electron'
 import type { InferOutput } from 'valibot'
 
+import type { CompanionReactionRequest } from '../../../shared/eventa'
 import type { I18n } from '../../libs/i18n'
 import type { ServerChannel } from '../../services/airi/channel-server'
 
@@ -16,8 +17,6 @@ import { isMacOS } from 'std-env'
 import { boolean, number, object, optional, record, string } from 'valibot'
 
 import icon from '../../../../resources/icon.png?asset'
-
-import type { CompanionReactionRequest } from '../../../shared/eventa'
 
 import { captionGetIsFollowingWindow, captionIsFollowingWindowChanged, companionReactionRequested } from '../../../shared/eventa'
 import { baseUrl, getElectronMainDirname, load, withHashRoute } from '../../libs/electron/location'
@@ -184,6 +183,9 @@ export function setupCaptionWindowManager(params: {
   }
 
   function followMainWindow(win: BrowserWindow) {
+    if (detachMainMoveListener || win.isDestroyed() || !win.isVisible())
+      return
+
     const cfg = getConfig() ?? { isFollowing, matrices: {} }
     const initialOffset = cfg?.matrices?.[matrixHash]?.relativeToMain ?? computeRelativeOffset(win)
 
@@ -264,15 +266,17 @@ export function setupCaptionWindowManager(params: {
       moveThrottled()
       settleDebounced()
     }
-    onMainChange()
-    params.mainWindow.on('move', onMainChange)
-    params.mainWindow.on('resize', onMainChange)
     detachMainMoveListener = () => {
+      moveThrottled.cancel()
+      settleDebounced.cancel()
       params.mainWindow.removeListener('move', onMainChange)
       params.mainWindow.removeListener('resize', onMainChange)
       animation?.pause()
       animation = null
     }
+    onMainChange()
+    params.mainWindow.on('move', onMainChange)
+    params.mainWindow.on('resize', onMainChange)
   }
 
   function detachFromMain() {
@@ -354,8 +358,15 @@ export function setupCaptionWindowManager(params: {
 
     window.on('resize', persistBounds)
     window.on('move', persistBounds)
-    window.on('show', emitVisibilityChanged)
-    window.on('hide', emitVisibilityChanged)
+    window.on('show', () => {
+      if (isFollowing)
+        followMainWindow(window)
+      emitVisibilityChanged()
+    })
+    window.on('hide', () => {
+      detachFromMain()
+      emitVisibilityChanged()
+    })
 
     const cleanupGetAttached = defineInvokeHandler(context, captionGetIsFollowingWindow, async () => isFollowing)
 

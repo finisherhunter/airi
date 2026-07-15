@@ -31,18 +31,21 @@ function resolveChatSyncWindowRole(routePath: string): ChatSyncWindowRole | null
  * from the renderer root. Route pages should not dispose the channel because
  * in-window navigation can unmount them while the BrowserWindow is still alive.
  */
-export function createChatSyncWindowLifecycle(routePath: string, hash?: string) {
-  const chatSyncStore = useChatSyncStore()
-  const role = resolveChatSyncWindowRole(resolveInitialChatSyncRoutePath(routePath, hash))
+export function createChatSyncWindowLifecycle(routePath: string, hash?: string, enabled = true) {
+  const role = enabled ? resolveChatSyncWindowRole(resolveInitialChatSyncRoutePath(routePath, hash)) : null
+  let chatSyncStore: ReturnType<typeof useChatSyncStore> | undefined
 
   return {
     role,
     initialize() {
-      if (role)
-        chatSyncStore.initialize(role)
+      if (!role)
+        return
+
+      chatSyncStore ??= useChatSyncStore()
+      chatSyncStore.initialize(role)
     },
     dispose() {
-      if (role)
+      if (chatSyncStore)
         chatSyncStore.dispose()
     },
   }

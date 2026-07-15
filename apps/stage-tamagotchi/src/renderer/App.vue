@@ -70,14 +70,15 @@ settingsStore.controlsIslandIconSize = petLiteDefaults.controlsIslandIconSize
 settingsStore.analyticsEnabled = petLiteDefaults.analyticsEnabled
 const router = useRouter()
 const route = useRoute()
-const chatSessionStore = useChatSessionStore()
 const context = useElectronEventaContext()
 const getMainLocale = useElectronEventaInvoke(i18nGetLocale)
 const setLocale = useElectronEventaInvoke(i18nSetLocale)
 const initialWindowRoutePath = resolveInitialChatSyncRoutePath(route.path)
-const chatSyncLifecycle = createChatSyncWindowLifecycle(route.path)
 const isSpotlightWindowRoute = initialWindowRoutePath === '/spotlight'
 const isCaptionWindowRoute = initialWindowRoutePath === '/caption' || route.path === '/caption'
+const chatRuntimeEnabled = petLiteRuntimeFeatures.chat || petLiteRuntimeFeatures.hearing
+const chatSessionStore = chatRuntimeEnabled && !isCaptionWindowRoute ? useChatSessionStore() : undefined
+const chatSyncLifecycle = createChatSyncWindowLifecycle(route.path, undefined, chatRuntimeEnabled)
 const isSettingsWindowRoute = initialWindowRoutePath.startsWith('/settings')
 
 function createFullStageRuntime() {
@@ -349,7 +350,7 @@ onMounted(async () => {
   // https://github.com/moeru-ai/airi/issues/1658
   await restoreLocale()
 
-  if (!isCaptionWindowRoute)
+  if (chatSessionStore)
     await chatSessionStore.initialize()
 
   await stageRuntime?.initialize()
