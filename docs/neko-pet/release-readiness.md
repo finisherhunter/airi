@@ -96,3 +96,11 @@
 - 完整桌宠测试仍有 1 个既有失败：插件自动重载测试在 Windows 临时配置文件 rename 处出现 `EPERM`，随后 `afterSessionId` 为空；单独重跑仍可复现。本批次未修改插件持久化逻辑，首个 Windows 包前需要单独处理或明确豁免它。
 - 全仓 Vitest 还会触发与本桌宠批次无关的 cap-vite 跨平台路径/终端测试、plugin-sdk 路径断言和 server 数据库 hook 超时；不纳入本批次改动。
 - 定向 lint（本批次触碰的 5 个文件）：通过。全包 lint 仍有既有 Companion Bridge、channel-server、依赖排序等问题，未在本批次扩展修复范围。
+
+## 2026-07-16 Windows 打包记录
+
+- 生产构建单独执行通过，随后执行 Windows electron-builder。
+- `dist/AIRI-0.11.0-windows-x64-setup.exe` 已生成，大小 `623341967` bytes；`latest-x64.yml` 与 blockmap 已生成，安装包 SHA-512 与 `latest-x64.yml` 一致，文件头为有效 Windows PE（`MZ`）。
+- 本次打包命令最终退出失败，原因是残留的另一组 electron-builder 进程与当前命令同时操作同一 `dist` 目录，导致 `win-unpacked/electron.exe` 重命名竞争并出现 `ENOENT`。这不是代码构建错误，但本次命令不能标记为干净成功。
+- 另外记录了 `engines/stage-tamagotchi-godot/build/win` 不存在的 warning；Godot 当前为停用能力，首包未因此中止，但正式交付前应明确是否从 Windows 打包配置移除该可选资源声明。
+- 后续再次打包前必须确认没有旧的 electron-builder/makensis 进程，只允许单组打包进程运行；不能复用这次并发产生的结论。
