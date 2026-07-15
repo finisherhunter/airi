@@ -5,7 +5,7 @@ import { useCaptionItems } from './useCaptionItems'
 import { createCompanionReactionHandler } from './companion-reaction'
 
 describe('caption-companion presentation', () => {
-  it('replaces only the previous bridge caption and expires after ten seconds', () => {
+  it('replaces only the previous bridge caption and all captions expire after ten seconds', () => {
     vi.useFakeTimers()
 
     try {
@@ -26,10 +26,7 @@ describe('caption-companion presentation', () => {
       expect(captions.items.value).toHaveLength(3)
 
       vi.advanceTimersByTime(1)
-      expect(captions.items.value).toEqual([
-        expect.objectContaining({ type: 'caption-speaker', text: 'speaker' }),
-        expect.objectContaining({ type: 'caption-assistant', text: 'assistant' }),
-      ])
+      expect(captions.items.value).toEqual([])
     }
     finally {
       vi.useRealTimers()

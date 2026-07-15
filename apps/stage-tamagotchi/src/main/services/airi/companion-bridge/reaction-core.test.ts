@@ -47,10 +47,9 @@ describe('resolveCompanionReaction', () => {
     expect(resolveCompanionReaction(event({ reactionHint: 'caption-neutral' }), capabilities).semantic).toBe('neutral')
     expect(resolveCompanionReaction(event({ reactionHint: 'caption-random', priority: 'low' }), capabilities).motion).toBe('random')
     expect(resolveCompanionReaction(event({ reactionHint: 'unknown' }), capabilities).semantic).toBe('happy')
-    expect(resolveCompanionReaction(event(), { ...capabilities, motion: { live2d: false } })).toMatchObject({
-      motion: 'none',
-      semantic: undefined,
-    })
+    const reaction = resolveCompanionReaction(event(), { ...capabilities, motion: { live2d: false } })
+    expect(reaction).toMatchObject({ motion: 'none' })
+    expect(reaction).not.toHaveProperty('semantic')
   })
 })
 
