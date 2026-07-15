@@ -129,3 +129,11 @@
 - `app.asar` 从约 `1078 MB` 降至约 `955 MB`，其中 `node_modules` 从约 `973 MB` 降至约 `852 MB`，未压缩目录实际减少约 `120 MB`。
 - 当前只验证了未压缩目录，尚未重新生成安装包；下一步需要用单一 electron-builder 进程生成安装包并重新测量压缩后体积。
 - 这一批没有删除模型、字体、DuckDB、ONNX、Live2D/VRM、桥接或设置功能。
+
+### 第二批重复 workspace 资源过滤结果
+
+- 精确排除了 `stage-ui`、CJK/Xiaolai/ChillRoundM 字体包中已被生产构建产物替代的 `src/**`。
+- `electron-builder --dir` 验证通过；`out/renderer/assets` 中的 Hiyori Pro、Hiyori Free、VRM A/B 和 `out/main` 桥接代码均仍存在。
+- 未压缩目录从约 `1527 MB` 降至约 `1365 MB`；`app.asar` 从约 `955 MB` 降至约 `793 MB`，实际减少约 `162 MB`。
+- 这两批过滤合计将 `app.asar` 从首包约 `1078 MB` 降至约 `793 MB`，但尚未重新生成压缩安装包。
+- 下一步再处理平台 native 依赖、可选模型和已停用能力的资源；每项都必须先验证运行时引用和功能回归。
