@@ -121,3 +121,11 @@
 - 依赖体积大户：`@proj-airi` 约 `233 MB`、`onnxruntime-node` 约 `208 MB`、`onnxruntime-web` 约 `132 MB`、`@duckdb` 约 `137 MB`、`@fontsource` 约 `66 MB`。
 - 资源体积大户：DuckDB WASM 三份约 `98 MB`、Hiyori 模型压缩包约 `44 MB`、示例 VRM 约 `53 MB`、字体约 `51 MB`、ONNX WASM 约 `24 MB`。
 - 下一步先做运行时依赖与打包边界审计，再决定哪些资源改为可选下载；不直接删除模型导入、外观设置或桥接能力。
+
+### 第一批静态过滤结果
+
+- 在 `electron-builder.config.ts` 增加了生产包过滤：workspace 依赖的 source map、类型声明、测试文件、测试配置和 `.turbo` 缓存。
+- `typecheck`、生产 `build`、定向 ESLint 均通过；`electron-builder --dir` 生成成功。
+- `app.asar` 从约 `1078 MB` 降至约 `955 MB`，其中 `node_modules` 从约 `973 MB` 降至约 `852 MB`，未压缩目录实际减少约 `120 MB`。
+- 当前只验证了未压缩目录，尚未重新生成安装包；下一步需要用单一 electron-builder 进程生成安装包并重新测量压缩后体积。
+- 这一批没有删除模型、字体、DuckDB、ONNX、Live2D/VRM、桥接或设置功能。
