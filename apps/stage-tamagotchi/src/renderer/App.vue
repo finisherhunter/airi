@@ -295,7 +295,28 @@ function createFullStageRuntime() {
   }
 }
 
-const fullStageRuntime = isSpotlightWindowRoute ? null : createFullStageRuntime()
+function createCaptionRuntime() {
+  const displayModelsStore = useDisplayModelsStore()
+
+  return {
+    async initialize() {
+      // Caption reactions only need the persisted renderer/model selection to
+      // decide whether a Live2D motion can be forwarded to the stage window.
+      // Avoid loading chat, plugin, audio, and stage runtime services here.
+      await displayModelsStore.loadDisplayModelsFromIndexedDB()
+      await settingsStore.initializeStageModel()
+    },
+    dispose() {},
+  }
+}
+
+const stageRuntime = (() => {
+  if (isSpotlightWindowRoute)
+    return null
+  if (isCaptionWindowRoute)
+    return createCaptionRuntime()
+  return createFullStageRuntime()
+})()
 
 const { restore: restoreLocale } = useLanguage(language, getMainLocale, setLocale)
 
@@ -328,9 +349,10 @@ onMounted(async () => {
   // https://github.com/moeru-ai/airi/issues/1658
   await restoreLocale()
 
-  await chatSessionStore.initialize()
+  if (!isCaptionWindowRoute)
+    await chatSessionStore.initialize()
 
-  await fullStageRuntime?.initialize()
+  await stageRuntime?.initialize()
 })
 
 onUnmounted(() => {
@@ -346,7 +368,7 @@ watch(themeColorsHueDynamic, () => {
 }, { immediate: true })
 
 onUnmounted(() => {
-  fullStageRuntime?.dispose()
+  stageRuntime?.dispose()
 })
 </script>
 
