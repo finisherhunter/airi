@@ -344,8 +344,12 @@ This repository also derives AIRI Stage Tamagotchi into a lightweight optional N
 
 ### Current Phase
 
-- Establish and measure the unmodified AIRI Windows baseline.
-- Do not implement Pet Lite until the baseline audit is complete.
+- The unmodified AIRI Windows baseline, Pet Lite entry, Caption runtime narrowing,
+  dependency audit, and local verification are complete.
+- Current work is validating the external Neko event producer against the generic
+  Companion Bridge. Keep AIRI and Neko independently runnable while integrating.
+- Do not remove retained model import, appearance settings, notifications,
+  developer tools, or Companion Bridge capabilities without a new decision.
 
 ### Upstream Boundary
 
