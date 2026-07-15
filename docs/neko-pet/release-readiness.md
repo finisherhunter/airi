@@ -137,3 +137,18 @@
 - 未压缩目录从约 `1527 MB` 降至约 `1365 MB`；`app.asar` 从约 `955 MB` 降至约 `793 MB`，实际减少约 `162 MB`。
 - 这两批过滤合计将 `app.asar` 从首包约 `1078 MB` 降至约 `793 MB`，但尚未重新生成压缩安装包。
 - 下一步再处理平台 native 依赖、可选模型和已停用能力的资源；每项都必须先验证运行时引用和功能回归。
+
+### 优化后 Windows 包结果
+
+- 使用两批过滤后的配置重新执行单一 `electron-builder --win`，命令退出码 `0`。
+- 安装包从首包 `623341967` bytes（约 `594.2 MB`）降至 `479612254` bytes（约 `457.4 MB`），减少 `143729713` bytes，约 `23%`。
+- `latest-x64.yml` 中记录的 SHA-512 与安装包实际 SHA-512 一致；blockmap、`airi.exe` 和 `resources/app.asar` 均存在。
+- Godot Windows 资源目录缺失仍产生 warning；Godot 当前停用，本次包未因此失败，但正式发布前仍需决定是否条件化该 `extraResources` 声明。
+
+## 2026-07-16 后续体积评估
+
+- Windows x64 的 `onnxruntime-node` 多平台 native 文件理论上可再省约 `175 MiB` 未压缩；必须做成 Windows x64 专用打包规则，不能影响 macOS、Linux 和 Windows ARM 构建。回归范围包括本地推理、快捷键、窗口拖拽和 Companion Bridge。
+- Hiyori Pro 是首屏默认模型，必须保留；Hiyori Free、VRM A/B 是选择后才加载的预置资源，可以评估为独立资源包，但不能删除模型导入、模型设置、外观和动作能力。
+- DuckDB WASM 当前在 Stage 挂载时执行未来功能桩，应改为真实记忆功能首次使用时加载；保留 API、worker 和恢复路径。
+- ONNX WASM、听觉/抠图/推理资源可移出 Pet Lite 首屏路径，保留首次启用时加载和缓存能力。
+- 后续实施顺序：先做 Windows x64 native 裁剪实验，再做 DuckDB/ONNX 延迟加载，最后评估可选模型和字体资源拆包；每批都要重新生成包并做对应功能回归。
