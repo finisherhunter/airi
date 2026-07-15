@@ -369,6 +369,7 @@ merely slower progress.
 
 - Never use a short foreground timeout for `pnpm install`, large builds, Rust compilation, or other known long-running commands.
 - A tool timeout only ends the command wrapper; it does not prove that child processes stopped. After any timeout, inspect the process tree before retrying.
+- Never stop an installation merely because the monitoring command timed out or progress appears slow. Termination requires direct evidence of failure, such as a non-zero process exit, a terminal error in the log, or a confirmed deadlocked process after inspection.
 - Only one install or dependency-linking operation may run for this workspace at a time. Check `pnpm`, `corepack`, and their child processes before starting another one.
 - For long installs, start one hidden background process, redirect output to `.Codex-tmp/<task>/`, record its PID and log path, and monitor that same process until it exits.
 - Do not start a replacement install because progress appears slow. Start one only after the previous process has exited and its log shows success or failure.
