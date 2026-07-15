@@ -111,3 +111,13 @@
 - 本次只有一组实际 electron-builder 进程，命令以退出码 `0` 完成。
 - 安装包、blockmap、`latest-x64.yml`、`win-unpacked/airi.exe` 和 `resources/app.asar` 均已生成；安装包大小仍为 `623341967` bytes。
 - Godot Windows 资源目录缺失仍只是 warning；当前 Godot 能力停用，不影响本次 AIRI Pet Lite 包生成。
+
+## 2026-07-16 首包体积基线
+
+- Windows 安装包：`623341967` bytes，约 `594 MB`。
+- `dist/win-unpacked`：约 `1.3 GB`；Electron 运行时本体约 `213 MB`，不是主要问题。
+- `resources/app.asar`：约 `1.08 GB`。
+- `app.asar` 内：`node_modules` 约 `973 MB`，`out/renderer/assets` 约 `325 MB`。
+- 依赖体积大户：`@proj-airi` 约 `233 MB`、`onnxruntime-node` 约 `208 MB`、`onnxruntime-web` 约 `132 MB`、`@duckdb` 约 `137 MB`、`@fontsource` 约 `66 MB`。
+- 资源体积大户：DuckDB WASM 三份约 `98 MB`、Hiyori 模型压缩包约 `44 MB`、示例 VRM 约 `53 MB`、字体约 `51 MB`、ONNX WASM 约 `24 MB`。
+- 下一步先做运行时依赖与打包边界审计，再决定哪些资源改为可选下载；不直接删除模型导入、外观设置或桥接能力。
