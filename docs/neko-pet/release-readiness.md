@@ -104,3 +104,10 @@
 - 本次打包命令最终退出失败，原因是残留的另一组 electron-builder 进程与当前命令同时操作同一 `dist` 目录，导致 `win-unpacked/electron.exe` 重命名竞争并出现 `ENOENT`。这不是代码构建错误，但本次命令不能标记为干净成功。
 - 另外记录了 `engines/stage-tamagotchi-godot/build/win` 不存在的 warning；Godot 当前为停用能力，首包未因此中止，但正式交付前应明确是否从 Windows 打包配置移除该可选资源声明。
 - 后续再次打包前必须确认没有旧的 electron-builder/makensis 进程，只允许单组打包进程运行；不能复用这次并发产生的结论。
+
+### 干净重打包结果
+
+- 清理旧的生成目录并确认没有打包进程后，重新执行 `corepack pnpm exec electron-builder --win`。
+- 本次只有一组实际 electron-builder 进程，命令以退出码 `0` 完成。
+- 安装包、blockmap、`latest-x64.yml`、`win-unpacked/airi.exe` 和 `resources/app.asar` 均已生成；安装包大小仍为 `623341967` bytes。
+- Godot Windows 资源目录缺失仍只是 warning；当前 Godot 能力停用，不影响本次 AIRI Pet Lite 包生成。
