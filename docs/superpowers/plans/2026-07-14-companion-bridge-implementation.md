@@ -12,7 +12,7 @@
 
 - AIRI 是桌宠表现能力的唯一宿主；Neko 旧 Companion、气泡、贴纸和动作调度不作为表现基线或兜底。
 - 不创建第二套 WebSocket 服务或 Neko 私有消息格式；必须复用 AIRI 现有协议和回环服务。
-- 只监听 `127.0.0.1`；第一阶段不开放局域网，不由 Neko 自动启动、安装或更新 AIRI。
+- 只监听 `127.0.0.1`；当前桥接联调不自动启动、安装或更新 AIRI。下一阶段可增加用户控制的 AIRI 外部 Companion 启动器。
 - 外部事件只能携带 `source/topic/intent/priority/text/reactionHint/coalesceKey/ttlMs/createdAt`，不能携带 Live2D 文件名、自由动作脚本、Rust command、路径或原始高频进度。
 - 回执只有 `accepted`、`completed`、`dropped`；事件 ID 必须幂等，重复发送不重复入队。
 - 反应最多包含字幕、一个模型动作和未来语音占位；第一阶段不做 TTS、嘴部动画、多段动作或复杂编舞。
@@ -168,7 +168,17 @@
 
 ## Deferred
 
-TTS、嘴部动画、自定义反应编辑器、更多模型档案、AI 润色/动作选择、LAN、Neko 自动启动 AIRI、复杂桌面覆盖层和 UI 视觉微调不进入本次实现。
+TTS、嘴部动画、自定义反应编辑器、更多模型档案、AI 润色/动作选择、LAN、复杂桌面覆盖层和 UI 视觉微调不进入本次实现。
+
+## Next Phase: Optional AIRI Companion Host
+
+目标是让 Neko Core 在用户开启选项后启动已安装的 AIRI，而不是把 AIRI 代码内嵌进 Neko。
+
+- Neko Core、AIRI Pet、通用 Companion Bridge 保持三个边界；AIRI 仍是可替换的外部 Companion。
+- Neko 只保存用户选择的 AIRI 可执行文件路径和启用状态；没有路径或启动失败时，Neko 继续独立运行。
+- Neko 启动 AIRI 后仍通过发现文件和现有协议连接，不新增私有 IPC 或第二套消息格式。
+- 默认不在 Neko 退出时强制关闭 AIRI，避免影响用户手动启动的 AIRI；联动退出需单独设计和设置。
+- 打包优先提供两个独立安装包；Neko 的 Companion 设置负责检测、启动和禁用 AIRI，不要求用户重新打包 Neko。
 
 ## Leader Review Gates
 
