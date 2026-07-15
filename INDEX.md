@@ -41,6 +41,8 @@ Godot 舞台已进入第五批 `可恢复停用`：Pet Lite 不显示 Godot 切�
 | 英文回退词条 | `packages/i18n/src/locales/en/settings.yaml` |
 | 主进程服务装配 | `apps/stage-tamagotchi/src/main/index.ts` |
 
+事件队列当前按第一阶段基线运行：默认 TTL 30 秒、单反应约 3 秒、优先级/去重/合并/过期丢弃暂不重写。提醒和批量任务事件接入后再观察实际延迟；若完成/失败结果被前序反应阻塞，再拆分信息即时通道与动作节流队列。详见桥接设计文档的“事件队列优化暂缓”。
+
 ## 可恢复操作规则
 
 1. **入口层**：先改 `pet-lite-features.ts` 的开关或隐藏路由集合。

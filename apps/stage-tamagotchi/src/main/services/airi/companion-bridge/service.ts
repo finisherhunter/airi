@@ -32,7 +32,7 @@ export type CompanionBridgeLifecycle = Pick<Lifecycle, 'appHooks'>
 export interface CompanionBridgeRenderer {
   ensureReady: () => void | Promise<void>
   emit: (request: CompanionReactionRequest) => void
-  dispose: () => void
+  dispose?: () => void
 }
 
 export type CompanionReactionRenderer = CompanionBridgeRenderer
@@ -394,7 +394,7 @@ export function createCompanionBridge(params: CompanionBridgeServiceOptions): Co
     client?.close()
     client = undefined
     if (!rendererDisposed) {
-      params.renderer.dispose()
+      params.renderer.dispose?.()
       rendererDisposed = true
     }
 

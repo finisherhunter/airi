@@ -77,6 +77,7 @@ const setLocale = useElectronEventaInvoke(i18nSetLocale)
 const initialWindowRoutePath = resolveInitialChatSyncRoutePath(route.path)
 const chatSyncLifecycle = createChatSyncWindowLifecycle(route.path)
 const isSpotlightWindowRoute = initialWindowRoutePath === '/spotlight'
+const isCaptionWindowRoute = initialWindowRoutePath === '/caption' || route.path === '/caption'
 const isSettingsWindowRoute = initialWindowRoutePath.startsWith('/settings')
 
 function createFullStageRuntime() {
@@ -353,7 +354,7 @@ onUnmounted(() => {
   <ToasterRoot @close="id => toast.dismiss(id)">
     <Toaster />
   </ToasterRoot>
-  <ResizeHandler v-if="!isSpotlightWindowRoute" />
+  <ResizeHandler v-if="!isSpotlightWindowRoute && !isCaptionWindowRoute" />
   <RouterView />
 </template>
 

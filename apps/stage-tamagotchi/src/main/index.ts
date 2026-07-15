@@ -20,7 +20,6 @@ import { isLinux } from 'std-env'
 
 import icon from '../../resources/icon.png?asset'
 
-import { companionReactionRequested } from '../shared/eventa'
 import { petLiteRuntimeFeatures } from '../shared/pet-lite-features'
 import { openDebugger, setupDebugger } from './app/debugger'
 import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
@@ -254,15 +253,13 @@ app.whenReady().then(async () => {
   const companionBridge = injeca.provide('services:companion-bridge', {
     dependsOn: { lifecycle, serverChannel, captionWindow },
     build: ({ dependsOn }) => {
-      const { context, dispose } = createContext(ipcMain)
       return createCompanionBridge({
         lifecycle: dependsOn.lifecycle,
         app,
         serverChannel: dependsOn.serverChannel,
         renderer: {
-          ensureReady: () => dependsOn.captionWindow.getWindow(),
-          emit: request => context.emit(companionReactionRequested, request),
-          dispose,
+          ensureReady: async () => { await dependsOn.captionWindow.getWindow() },
+          emit: request => dependsOn.captionWindow.emitReaction(request),
         },
         enabled: petLiteRuntimeFeatures.companionBridge,
       })

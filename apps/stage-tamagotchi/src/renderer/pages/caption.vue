@@ -14,7 +14,7 @@ import { createCompanionReactionHandler } from '../composables/companion-reactio
 import { useCaptionItems } from '../composables/useCaptionItems'
 
 /** Keep stale captions from lingering after the last broadcast update. */
-const CAPTION_TEXT_EXPIRY_MS = 10_000
+const CAPTION_TEXT_EXPIRY_MS = 5_000
 
 const attached = ref(true)
 
@@ -63,7 +63,7 @@ const captionTextByType = computed(() => ({
 const handleCompanionReaction = createCompanionReactionHandler({
   getRenderer: () => settingsStore.stageModelRenderer,
   hasMotionProfile: () => settingsStore.stageModelSelected === 'preset-live2d-1',
-  postCaption: event => postCaption(event),
+  postCaption: event => addCaptionItem(event),
   setMotion: motion => live2dStore.currentMotion = motion,
 })
 

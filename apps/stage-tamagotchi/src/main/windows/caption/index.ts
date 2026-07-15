@@ -17,7 +17,9 @@ import { boolean, number, object, optional, record, string } from 'valibot'
 
 import icon from '../../../../resources/icon.png?asset'
 
-import { captionGetIsFollowingWindow, captionIsFollowingWindowChanged } from '../../../shared/eventa'
+import type { CompanionReactionRequest } from '../../../shared/eventa'
+
+import { captionGetIsFollowingWindow, captionIsFollowingWindowChanged, companionReactionRequested } from '../../../shared/eventa'
 import { baseUrl, getElectronMainDirname, load, withHashRoute } from '../../libs/electron/location'
 import { createConfig } from '../../libs/electron/persistence'
 import { createReusableWindow } from '../../libs/electron/window-manager'
@@ -109,6 +111,7 @@ function createCaptionWindow(options?: BrowserWindowConstructorOptions) {
     width: 480,
     height: 180,
     show: false,
+    resizable: false,
     icon,
     webPreferences: {
       preload: join(getElectronMainDirname(), '../preload/index.mjs'),
@@ -166,6 +169,7 @@ export function setupCaptionWindowManager(params: {
 
   let isFollowing = getConfig().isFollowing ?? true
   let lastProgrammaticMoveAt = 0
+  let captionSize: Pick<Rectangle, 'width' | 'height'> | undefined
 
   // Keep references to listeners so we can detach when toggling
   let detachMainMoveListener: (() => void) | undefined
@@ -216,7 +220,8 @@ export function setupCaptionWindowManager(params: {
           const toX = Math.round(state.x)
           const toY = Math.round(state.y)
           lastProgrammaticMoveAt = Date.now()
-          win.setPosition(toX, toY)
+          const size = captionSize ?? win.getBounds()
+          win.setBounds({ x: toX, y: toY, width: size.width, height: size.height })
         },
       })
     }
@@ -235,7 +240,8 @@ export function setupCaptionWindowManager(params: {
       const b = win.getBounds()
       let tx = main.x + stored.dx
       let ty = main.y + stored.dy
-      const target = { x: tx, y: ty, width: b.width, height: b.height }
+      const size = captionSize ?? b
+      const target = { x: tx, y: ty, width: size.width, height: size.height }
       const workArea = screen.getDisplayMatching(target).workArea
       const clamped = clampBoundsWithinRect(target, workArea)
       tx = clamped.x
@@ -307,6 +313,7 @@ export function setupCaptionWindowManager(params: {
     ipcMain.setMaxListeners(0)
 
     const window = createCaptionWindow()
+    window.setResizable(false)
     currentWindow = window
     const { context } = createContext(ipcMain, window)
     eventaContext = context
@@ -317,20 +324,25 @@ export function setupCaptionWindowManager(params: {
 
     const cfg = getConfig()
     const saved = cfg?.matrices?.[matrixHash]?.bounds
-
-    if (saved) {
-      const workArea = screen.getDisplayMatching(saved).workArea
-      const clamped = clampBoundsWithinRect(saved, workArea)
-      window.setBounds(clamped)
-    }
-    else {
-      const initialBounds = computeInitialCaptionBounds({ mainWindow: params.mainWindow })
-      window.setBounds(initialBounds)
-    }
+    const defaultBounds = computeInitialCaptionBounds({ mainWindow: params.mainWindow })
+    const requestedBounds = saved
+      ? { ...defaultBounds, x: saved.x, y: saved.y }
+      : defaultBounds
+    const workArea = screen.getDisplayMatching(requestedBounds).workArea
+    const initialBounds = clampBoundsWithinRect(requestedBounds, workArea)
+    captionSize = { width: initialBounds.width, height: initialBounds.height }
+    window.setBounds(initialBounds)
 
     const persistBounds = () => {
       const config = getConfig() ?? { isFollowing, matrices: {} }
-      const b = window.getBounds()
+      let b = window.getBounds()
+      if (captionSize && (b.width !== captionSize.width || b.height !== captionSize.height)) {
+        // Keep the overlay size independent from the main-window follow movement.
+        // A transparent frameless window can receive native resize notifications while its position changes.
+        lastProgrammaticMoveAt = Date.now()
+        window.setSize(captionSize.width, captionSize.height)
+        b = window.getBounds()
+      }
       config.matrices[matrixHash] = { ...config.matrices[matrixHash], bounds: b }
       config.isFollowing = isFollowing
       if (isFollowing && Date.now() - lastProgrammaticMoveAt > 100) {
@@ -434,6 +446,7 @@ export function setupCaptionWindowManager(params: {
     // Prevent user-move persistence from overwriting our programmatic move
     lastProgrammaticMoveAt = Date.now()
     const initialBounds = computeInitialCaptionBounds({ mainWindow: params.mainWindow })
+    captionSize = { width: initialBounds.width, height: initialBounds.height }
     window.setBounds(initialBounds)
 
     // Persist new bounds and a clean relative offset so follow uses it
@@ -472,6 +485,10 @@ export function setupCaptionWindowManager(params: {
     }
   }
 
+  function emitReaction(request: CompanionReactionRequest) {
+    eventaContext?.emit(companionReactionRequested, request)
+  }
+
   return {
     getWindow,
     setFollowWindow,
@@ -481,5 +498,6 @@ export function setupCaptionWindowManager(params: {
     isVisible,
     toggleVisibility,
     onVisibilityChanged,
+    emitReaction,
   }
 }
