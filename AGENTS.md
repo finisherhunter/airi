@@ -358,3 +358,20 @@ This repository also derives AIRI Stage Tamagotchi into a lightweight optional N
 
 - Put baseline logs, screenshots, metrics, generated reports, and experiments under `.Codex-tmp/baseline/`.
 - Do not commit `.Codex-tmp/`.
+
+### Long-Running Installation and Process Rules
+
+The workspace has previously suffered a failed dependency installation because a
+short-lived foreground command timed out while its child `pnpm` process remained
+alive. A second installation was then started, and both processes competed for
+the same `node_modules` files. This caused a real `ERR_PNPM_EBUSY` failure, not
+merely slower progress.
+
+- Never use a short foreground timeout for `pnpm install`, large builds, Rust compilation, or other known long-running commands.
+- A tool timeout only ends the command wrapper; it does not prove that child processes stopped. After any timeout, inspect the process tree before retrying.
+- Only one install or dependency-linking operation may run for this workspace at a time. Check `pnpm`, `corepack`, and their child processes before starting another one.
+- For long installs, start one hidden background process, redirect output to `.Codex-tmp/<task>/`, record its PID and log path, and monitor that same process until it exits.
+- Do not start a replacement install because progress appears slow. Start one only after the previous process has exited and its log shows success or failure.
+- Before stopping a process, distinguish stale agent-owned processes from the user's active dev server. Never stop a user's active development process merely to make installation convenient.
+- Treat `ERR_PNPM_EBUSY`, partial workspace links, missing binaries, or a changed lockfile after concurrent installs as an incomplete installation. Repair with one clean install, then rerun typecheck and tests.
+- Do not claim the environment is ready from a partial `node_modules` check. Verify the install result, required workspace links, package-manager exit status, typecheck, and the relevant tests.
