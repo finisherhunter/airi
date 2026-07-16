@@ -3,7 +3,10 @@
 import type { Configuration } from 'electron-builder'
 
 import { execSync } from 'node:child_process'
+import { rm } from 'node:fs/promises'
+import { join } from 'node:path'
 
+import { Arch } from 'electron-builder'
 import { isMacOS } from 'std-env'
 
 function hasXcode26OrAbove() {
@@ -105,6 +108,28 @@ export default {
   asarUnpack: [
     '**/*.node',
   ],
+  afterPack: async ({ appOutDir, electronPlatformName, arch }) => {
+    if (electronPlatformName !== 'win32' || arch !== Arch.x64)
+      return
+
+    // Keep native dependency pruning limited to Windows x64 after app files are staged.
+    const unpackedNodeModulesPath = join(appOutDir, 'resources', 'app.asar.unpacked', 'node_modules')
+    await Promise.all([
+      rm(join(unpackedNodeModulesPath, 'onnxruntime-node', 'bin', 'napi-v3', 'darwin'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'onnxruntime-node', 'bin', 'napi-v3', 'linux'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'onnxruntime-node', 'bin', 'napi-v3', 'win32', 'arm64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'uiohook-napi', 'prebuilds', 'darwin-x64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'uiohook-napi', 'prebuilds', 'darwin-arm64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'uiohook-napi', 'prebuilds', 'linux-x64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'uiohook-napi', 'prebuilds', 'linux-arm64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'uiohook-napi', 'prebuilds', 'linux-loong64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'uiohook-napi', 'prebuilds', 'win32-arm64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'electron-click-drag-plugin', 'build', 'Release', 'darwin-x64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'electron-click-drag-plugin', 'build', 'Release', 'darwin-arm64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'electron-click-drag-plugin', 'build', 'Release', 'linux-x64'), { force: true, recursive: true }),
+      rm(join(unpackedNodeModulesPath, 'electron-click-drag-plugin', 'build', 'Release', 'linux-arm64'), { force: true, recursive: true }),
+    ])
+  },
   extraResources: [
     {
       from: '../../engines/stage-tamagotchi-godot/build/${os}',

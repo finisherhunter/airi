@@ -152,3 +152,11 @@
 - DuckDB WASM 当前在 Stage 挂载时执行未来功能桩，应改为真实记忆功能首次使用时加载；保留 API、worker 和恢复路径。
 - ONNX WASM、听觉/抠图/推理资源可移出 Pet Lite 首屏路径，保留首次启用时加载和缓存能力。
 - 后续实施顺序：先做 Windows x64 native 裁剪实验，再做 DuckDB/ONNX 延迟加载，最后评估可选模型和字体资源拆包；每批都要重新生成包并做对应功能回归。
+
+### Windows x64 native 裁剪结果
+
+- 新增 `afterPack`，仅在 `electronPlatformName === 'win32'` 且 `arch === Arch.x64` 时删除 ONNX Runtime、uiohook 和拖拽插件的非目标平台目录；没有修改全局 `files`/`asarUnpack` 规则。
+- `--dir` 验证确认只保留 `onnxruntime-node/win32/x64`、`uiohook-napi/win32-x64` 和拖拽插件 `win32-x64`，目标 DLL 与 `.node` 文件均存在。
+- 裁剪后的 `airi.exe` 启动烟测保持运行 20 秒通过；未出现启动即退出。
+- 最终 Windows 安装包生成成功，大小 `432910535` bytes（约 `412.9 MB`），相较 native 裁剪前约 `457.4 MB` 再减少约 `44.5 MB`，相较首包约 `594.2 MB` 累计减少约 `181.3 MB`。
+- `latest-x64.yml` 的 SHA-512 与实际安装包一致；当前包仍只代表 Windows x64，其他平台需要各自保留对应 native 文件。
