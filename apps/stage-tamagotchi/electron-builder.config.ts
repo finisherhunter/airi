@@ -96,7 +96,6 @@ export default {
     '!**/node_modules/@proj-airi/font-xiaolai/src/**',
     '!**/node_modules/@proj-airi/font-chillroundm/src/**',
     '**/node_modules/debug/**/*',
-    '**/node_modules/superjson/**/*',
     '!electron.vite.config.{js,ts,mjs,cjs}',
     '!vite.config.{js,ts,mjs,cjs}',
     '!uno.config.{js,ts,mjs,cjs}',
