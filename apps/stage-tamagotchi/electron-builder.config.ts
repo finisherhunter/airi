@@ -96,6 +96,12 @@ export default {
     '!**/node_modules/@proj-airi/font-xiaolai/src/**',
     '!**/node_modules/@proj-airi/font-chillroundm/src/**',
     '**/node_modules/debug/**/*',
+    // Keep the runtime codec dependency closure in the packaged app. pnpm's
+    // isolated workspace layout can otherwise cause electron-builder to prune
+    // transitive dependencies resolved from package-local links.
+    '**/node_modules/superjson/**/*',
+    '**/node_modules/copy-anything/**/*',
+    '**/node_modules/is-what/**/*',
     '!electron.vite.config.{js,ts,mjs,cjs}',
     '!vite.config.{js,ts,mjs,cjs}',
     '!uno.config.{js,ts,mjs,cjs}',

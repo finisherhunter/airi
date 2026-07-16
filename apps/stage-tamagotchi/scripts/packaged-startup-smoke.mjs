@@ -26,7 +26,10 @@ const executablePath = join(appDir, executable)
 await access(executablePath)
 
 const archivePath = join(appDir, 'resources', 'app.asar')
-const archiveFiles = new Set(listPackage(archivePath, { isPack: false }))
+const archiveFiles = new Set(
+  listPackage(archivePath, { isPack: false })
+    .map(file => file.replaceAll('\\', '/').replace(/^\//, '')),
+)
 const requiredPackages = ['superjson', 'copy-anything', 'is-what']
 const missingPackages = requiredPackages.filter(name => !archiveFiles.has(`node_modules/${name}/package.json`))
 
