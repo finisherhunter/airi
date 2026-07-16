@@ -26,10 +26,16 @@ const executablePath = join(appDir, executable)
 await access(executablePath)
 
 const archivePath = join(appDir, 'resources', 'app.asar')
-const archiveFiles = new Set(
-  listPackage(archivePath, { isPack: false })
-    .map(file => file.replaceAll('\\', '/').replace(/^\//, '')),
-)
+const archiveEntries = listPackage(archivePath, { isPack: false })
+function normalizeArchivePath(file) {
+  return file.replaceAll('\\', '/').replace(/^\//, '')
+}
+
+const archiveFiles = new Set(archiveEntries.map(normalizeArchivePath))
+function archiveEntry(file) {
+  const normalized = normalizeArchivePath(file)
+  return archiveEntries.find(entry => normalizeArchivePath(entry) === normalized) ?? file
+}
 const requiredPackages = ['superjson', 'copy-anything', 'is-what']
 const missingPackages = requiredPackages.filter(name => !archiveFiles.has(`node_modules/${name}/package.json`))
 
@@ -37,7 +43,7 @@ if (missingPackages.length > 0) {
   throw new Error(`Packaged runtime dependencies are missing from app.asar: ${missingPackages.join(', ')}`)
 }
 
-const superjsonPackage = JSON.parse(extractFile(archivePath, 'node_modules/superjson/package.json').toString('utf8'))
+const superjsonPackage = JSON.parse(extractFile(archivePath, archiveEntry('node_modules/superjson/package.json')).toString('utf8'))
 const declaredDependencies = Object.keys(superjsonPackage.dependencies ?? {})
 const missingSuperjsonDependencies = declaredDependencies
   .filter(name => !archiveFiles.has(`node_modules/${name}/package.json`))
