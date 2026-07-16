@@ -34,7 +34,8 @@ function normalizeArchivePath(file) {
 const archiveFiles = new Set(archiveEntries.map(normalizeArchivePath))
 function archiveEntry(file) {
   const normalized = normalizeArchivePath(file)
-  return archiveEntries.find(entry => normalizeArchivePath(entry) === normalized) ?? file
+  const entry = archiveEntries.find(entry => normalizeArchivePath(entry) === normalized) ?? file
+  return entry.replace(/^[/\\]+/, '')
 }
 const requiredPackages = ['superjson', 'copy-anything', 'is-what']
 const missingPackages = requiredPackages.filter(name => !archiveFiles.has(`node_modules/${name}/package.json`))
