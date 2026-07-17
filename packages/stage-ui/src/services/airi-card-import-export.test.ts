@@ -19,14 +19,14 @@ describe('airi card package import/export', () => {
 
   it('exports sanitized packages and restores display models', async () => {
     const displayModelsStore = useDisplayModelsStore()
-    const fetch = vi.fn(async () => new Response('preset-vrm-model'))
+    const fetch = vi.fn(async () => new Response('preset-live2d-model'))
     vi.stubGlobal('fetch', fetch)
     vi.spyOn(displayModelsStore, 'getDisplayModel').mockResolvedValue({
-      id: 'preset-vrm-1',
-      format: DisplayModelFormat.VRM,
+      id: 'preset-live2d-1',
+      format: DisplayModelFormat.Live2dZip,
       type: 'url' as const,
-      url: '/assets/avatar.vrm',
-      name: 'AvatarSample_A',
+      url: '/assets/hiyori.zip',
+      name: 'Hiyori (Pro)',
       importedAt: 1,
     })
     mockAddDisplayModel(displayModelsStore, 'display-model-imported')
@@ -37,15 +37,15 @@ describe('airi card package import/export', () => {
     const imported = await importAiriCardPackage({ file: new File([exported], 'card.zip'), displayModelsStore })
     const airi = airiFrom(cardJson)
 
-    expect(fetch).toHaveBeenCalledWith('/assets/avatar.vrm')
-    expect(await readJson(zip, 'manifest.json')).toMatchObject({ format: 'airi-character-card', version: 1, resources: { displayModel: { path: 'models/body-model.vrm', format: DisplayModelFormat.VRM, name: 'AvatarSample_A.vrm' } } })
-    expect(await zip.file('models/body-model.vrm')?.async('string')).toBe('preset-vrm-model')
+    expect(fetch).toHaveBeenCalledWith('/assets/hiyori.zip')
+    expect(await readJson(zip, 'manifest.json')).toMatchObject({ format: 'airi-character-card', version: 1, resources: { displayModel: { path: 'models/body-model.zip', format: DisplayModelFormat.Live2dZip, name: 'Hiyori (Pro).zip' } } })
+    expect(await zip.file('models/body-model.zip')?.async('string')).toBe('preset-live2d-model')
     expect(cardJson.data).toMatchObject({ name: 'AIRI / Test Card', creator: '', tags: [], mes_example: '' })
     expect(airi.modules).toMatchObject({ consciousness: { provider: 'openai', model: 'gpt-4o' }, speech: { provider: 'elevenlabs', model: 'eleven', voice_id: 'alloy' } })
     expect(airi.modules).not.toHaveProperty('activeBackgroundId')
     expect(airi.modules.artistry).not.toHaveProperty('workflowId')
     expect(airi.agents).toEqual({})
-    expect(displayModelsStore.addDisplayModel).toHaveBeenCalledWith(DisplayModelFormat.VRM, expect.objectContaining({ name: 'AvatarSample_A.vrm' }))
+    expect(displayModelsStore.addDisplayModel).toHaveBeenCalledWith(DisplayModelFormat.Live2dZip, expect.objectContaining({ name: 'Hiyori (Pro).zip' }))
     expect(airiFrom(imported).modules.displayModelId).toBe('display-model-imported')
   })
 
@@ -77,7 +77,7 @@ function mockAddDisplayModel(store: ReturnType<typeof useDisplayModelsStore>, id
   }))
 }
 
-function createCard(displayModelId = 'preset-vrm-1'): AiriCard {
+function createCard(displayModelId = 'preset-live2d-1'): AiriCard {
   return {
     name: 'AIRI / Test Card',
     nickname: 'Tester',

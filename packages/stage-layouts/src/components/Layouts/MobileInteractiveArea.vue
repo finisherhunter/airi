@@ -3,7 +3,6 @@ import type { ChatHistoryItem } from '@proj-airi/stage-ui/types/chat'
 import type { ChatProvider } from '@xsai-ext/providers/utils'
 
 import { isStageTamagotchi } from '@proj-airi/stage-shared'
-import { useThreeViewControl } from '@proj-airi/stage-ui-three'
 import { ChatHistory, HearingConfigDialog } from '@proj-airi/stage-ui/components'
 import { ChatSessionsDrawer } from '@proj-airi/stage-ui/components/scenarios/chat'
 import { useAnalytics, useAudioAnalyzer } from '@proj-airi/stage-ui/composables'
@@ -74,7 +73,6 @@ const { activeProvider, activeModel } = storeToRefs(useConsciousnessStore())
 useResizeObserver(document.documentElement, () => screenSafeArea.update())
 const { themeColorsHueDynamic } = storeToRefs(useSettings())
 const { viewControlsEnabled: l2dViewCtrlEnabled } = useL2dViewControl()
-const { viewControlsEnabled: threeViewCtrlEnabled } = useThreeViewControl()
 const settingsAudioDevice = useSettingsAudioDevice()
 const { enabled, stream } = storeToRefs(settingsAudioDevice)
 const { ingest, onAfterMessageComposed } = chatOrchestrator
@@ -174,7 +172,7 @@ onMounted(() => {
     <KeepAlive>
       <Transition name="fade">
         <ChatHistory
-          v-if="!threeViewCtrlEnabled && !l2dViewCtrlEnabled"
+          v-if="!l2dViewCtrlEnabled"
           variant="mobile"
           :messages="historyMessages"
           :sending="sending"

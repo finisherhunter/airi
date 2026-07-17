@@ -13,8 +13,7 @@ export const petLiteFeatures = {
  * Runtime services disabled for the lightweight pet baseline.
  *
  * The source modules remain available so a later Pet feature can restore them
- * by reconnecting their existing entry points. Godot stays available upstream,
- * but Pet Lite does not expose or start its experimental sidecar.
+ * by reconnecting their existing entry points.
  */
 export const petLiteRuntimeFeatures = {
   chat: false,
@@ -24,7 +23,6 @@ export const petLiteRuntimeFeatures = {
   mcp: false,
   channelServer: false,
   companionBridge: true,
-  godotStage: false,
 } as const
 
 export const petLiteDefaults = {

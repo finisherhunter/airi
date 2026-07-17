@@ -7,8 +7,8 @@ import { computed, watch } from 'vue'
 
 import { DisplayModelFormat, useDisplayModelsStore } from '../display-models'
 
-export type StageModelRenderer = 'live2d' | 'vrm' | 'spine' | 'godot' | 'disabled' | undefined
-type BuiltInStageModelRenderer = Exclude<StageModelRenderer, 'godot'>
+export type StageModelRenderer = 'live2d' | 'spine' | 'disabled' | undefined
+type BuiltInStageModelRenderer = StageModelRenderer
 
 export const useSettingsStageModel = defineStore('settings-stage-model', () => {
   const displayModelsStore = useDisplayModelsStore()
@@ -50,8 +50,6 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
     switch (model.format) {
       case DisplayModelFormat.Live2dZip:
         return 'live2d'
-      case DisplayModelFormat.VRM:
-        return 'vrm'
       case DisplayModelFormat.SpineZip:
         return 'spine'
       default:
@@ -67,8 +65,7 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
       replaceStageModelUrl(undefined)
       stageModelSelectedDisplayModel.value = undefined
       stageModelBuiltInRenderer.value = 'disabled'
-      if (stageModelRenderer.value !== 'godot')
-        stageModelRenderer.value = 'disabled'
+      stageModelRenderer.value = 'disabled'
       return
     }
 
@@ -80,15 +77,13 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
       replaceStageModelUrl(undefined)
       stageModelSelectedDisplayModel.value = undefined
       stageModelBuiltInRenderer.value = 'disabled'
-      if (stageModelRenderer.value !== 'godot')
-        stageModelRenderer.value = 'disabled'
+      stageModelRenderer.value = 'disabled'
       return
     }
 
     const builtInRenderer = resolveBuiltInStageModelRenderer(model)
     stageModelBuiltInRenderer.value = builtInRenderer
-    if (stageModelRenderer.value !== 'godot')
-      stageModelRenderer.value = builtInRenderer
+    stageModelRenderer.value = builtInRenderer
 
     if (model.type === 'file') {
       const nextUrl = URL.createObjectURL(model.file)

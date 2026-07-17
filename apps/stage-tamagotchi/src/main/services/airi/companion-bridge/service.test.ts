@@ -216,7 +216,6 @@ describe('createCompanionBridge', () => {
     expect(petLiteRuntimeFeatures.chat).toBe(false)
     expect(petLiteRuntimeFeatures.hearing).toBe(false)
     expect(petLiteRuntimeFeatures.mcp).toBe(false)
-    expect(petLiteRuntimeFeatures.godotStage).toBe(false)
     expect(petLiteRuntimeFeatures.artistry).toBe(false)
   })
 })

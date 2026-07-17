@@ -3,7 +3,6 @@ import type { ModelSettingsRuntimeSnapshot } from './runtime'
 
 import { Live2DScene } from '@proj-airi/stage-ui-live2d'
 import { SpineScene } from '@proj-airi/stage-ui-spine'
-import { ThreeScene, useModelStore } from '@proj-airi/stage-ui-three'
 import { useMouse } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
@@ -16,7 +15,6 @@ import {
 
 const props = defineProps<{
   live2dSceneClass?: string | string[]
-  vrmSceneClass?: string | string[]
   spineSceneClass?: string | string[]
 }>()
 
@@ -25,13 +23,11 @@ const emit = defineEmits<{
 }>()
 
 const settingsStore = useSettings()
-const modelStore = useModelStore()
 const live2dSceneRef = ref<{ canvasElement: () => HTMLCanvasElement | undefined }>()
-const vrmSceneRef = ref<{ canvasElement: () => HTMLCanvasElement | undefined }>()
 const spineSceneRef = ref<{ canvasElement: () => HTMLCanvasElement | undefined }>()
 const live2dComponentState = ref<'pending' | 'loading' | 'mounted'>('pending')
 const spineComponentState = ref<'pending' | 'loading' | 'mounted'>('pending')
-const vrmPreviewStageInstanceId = `model-settings-preview-stage:${Math.random().toString(36).slice(2, 10)}`
+const previewStageInstanceId = `model-settings-preview-stage:${Math.random().toString(36).slice(2, 10)}`
 
 const {
   stageModelSelected,
@@ -48,10 +44,7 @@ const {
   spineMaxFps,
   spineRenderScale,
 } = storeToRefs(settingsStore)
-const { sceneMutationLocked, scenePhase } = storeToRefs(modelStore)
-
 const live2dSceneClassList = computed(() => normalizeClassList(props.live2dSceneClass))
-const vrmSceneClassList = computed(() => normalizeClassList(props.vrmSceneClass))
 const spineSceneClassList = computed(() => normalizeClassList(props.spineSceneClass))
 
 function normalizeClassList(value?: string | string[]) {
@@ -74,9 +67,6 @@ async function capturePreviewFrame() {
   if (stageModelRenderer.value === 'live2d')
     return captureCanvasFrame(live2dSceneRef.value?.canvasElement())
 
-  if (stageModelRenderer.value === 'vrm')
-    return captureCanvasFrame(vrmSceneRef.value?.canvasElement())
-
   if (stageModelRenderer.value === 'spine')
     return captureCanvasFrame(spineSceneRef.value?.canvasElement())
 
@@ -90,7 +80,7 @@ const runtimeSnapshot = computed<ModelSettingsRuntimeSnapshot>(() => {
     const phase = resolveComponentStateToRuntimePhase(live2dComponentState.value, { hasModel })
 
     return createEmptyModelSettingsRuntimeSnapshot({
-      ownerInstanceId: vrmPreviewStageInstanceId,
+      ownerInstanceId: previewStageInstanceId,
       renderer: 'live2d',
       phase,
       controlsLocked: hasModel ? phase !== 'mounted' : false,
@@ -100,23 +90,11 @@ const runtimeSnapshot = computed<ModelSettingsRuntimeSnapshot>(() => {
     })
   }
 
-  if (stageModelRenderer.value === 'vrm') {
-    return createEmptyModelSettingsRuntimeSnapshot({
-      ownerInstanceId: vrmPreviewStageInstanceId,
-      renderer: 'vrm',
-      phase: hasModel ? scenePhase.value : 'no-model',
-      controlsLocked: hasModel ? sceneMutationLocked.value : false,
-      previewAvailable: hasModel,
-      canCapturePreview: !!vrmSceneRef.value?.canvasElement(),
-      updatedAt: Date.now(),
-    })
-  }
-
   if (stageModelRenderer.value === 'spine') {
     const phase = resolveComponentStateToRuntimePhase(spineComponentState.value, { hasModel })
 
     return createEmptyModelSettingsRuntimeSnapshot({
-      ownerInstanceId: vrmPreviewStageInstanceId,
+      ownerInstanceId: previewStageInstanceId,
       renderer: 'spine',
       phase,
       controlsLocked: hasModel ? phase !== 'mounted' : false,
@@ -126,20 +104,8 @@ const runtimeSnapshot = computed<ModelSettingsRuntimeSnapshot>(() => {
     })
   }
 
-  if (stageModelRenderer.value === 'godot') {
-    return createEmptyModelSettingsRuntimeSnapshot({
-      ownerInstanceId: vrmPreviewStageInstanceId,
-      renderer: 'godot',
-      phase: hasModel ? 'mounted' : 'no-model',
-      controlsLocked: false,
-      previewAvailable: false,
-      canCapturePreview: false,
-      updatedAt: Date.now(),
-    })
-  }
-
   return createEmptyModelSettingsRuntimeSnapshot({
-    ownerInstanceId: vrmPreviewStageInstanceId,
+    ownerInstanceId: previewStageInstanceId,
     updatedAt: Date.now(),
   })
 })
@@ -169,11 +135,6 @@ const cursorPosition = computed(() => ({
         :theme-colors-hue="themeColorsHue"
         :theme-colors-hue-dynamic="themeColorsHueDynamic"
       />
-    </div>
-  </template>
-  <template v-if="stageModelRenderer === 'vrm'">
-    <div :class="vrmSceneClassList">
-      <ThreeScene ref="vrmSceneRef" :cursor-position="cursorPosition" :model-src="stageModelSelectedUrl" />
     </div>
   </template>
   <template v-if="stageModelRenderer === 'spine'">

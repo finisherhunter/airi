@@ -32,7 +32,6 @@ import { createI18n } from './libs/i18n'
 import { createWindowAuthManagerService } from './services/airi/auth'
 import { setupServerChannel } from './services/airi/channel-server'
 import { createCompanionBridge } from './services/airi/companion-bridge/service'
-import { setupGodotStageManager } from './services/airi/godot-stage'
 import { setupBuiltInServer } from './services/airi/http-server'
 import { setupMcpStdioManager } from './services/airi/mcp-servers'
 import { setupExtensionHost } from './services/airi/plugins'
@@ -166,10 +165,6 @@ app.whenReady().then(async () => {
     build: async () => setupBuiltInServer({ servers: [] }),
   })
 
-  const godotStageManager = injeca.provide('modules:godot-stage-manager', {
-    build: async () => setupGodotStageManager(),
-  })
-
   const mcpStdioManager = injeca.provide('modules:mcp-stdio-manager', {
     build: async () => setupMcpStdioManager(),
   })
@@ -227,7 +222,7 @@ app.whenReady().then(async () => {
   void spotlightWindow
 
   const settingsWindow = injeca.provide('windows:settings', {
-    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, i18n, windowAuthManager },
+    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, i18n, windowAuthManager },
     build: async ({ dependsOn }) =>
       setupSettingsWindowReusableFunc({
         ...dependsOn,
@@ -236,7 +231,7 @@ app.whenReady().then(async () => {
   })
 
   const mainWindow = injeca.provide('windows:main', {
-    dependsOn: { settingsWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, godotStageManager, i18n, onboardingWindowManager, windowAuthManager },
+    dependsOn: { settingsWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, i18n, onboardingWindowManager, windowAuthManager },
     build: async ({ dependsOn }) => setupMainWindow({
       ...dependsOn,
       onWindowCreated: (window) => {
@@ -304,7 +299,7 @@ app.whenReady().then(async () => {
   // Pet Lite keeps the original providers available for restoration, but only
   // the retained application roots are connected to the startup graph.
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, companionBridge, airiHttpServer, godotStageManager, pluginHost, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
+    dependsOn: { mainWindow, tray, serverChannel, companionBridge, airiHttpServer, pluginHost, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager },
     callback: noop,
   })
 

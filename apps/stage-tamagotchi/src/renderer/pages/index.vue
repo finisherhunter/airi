@@ -14,7 +14,6 @@ import {
 } from '@proj-airi/electron-vueuse'
 import { createTranscriptBuffer } from '@proj-airi/pipelines-audio'
 import { IS_DEV } from '@proj-airi/stage-shared'
-import { useModelStore, useThreeSceneIsTransparentAtPoint } from '@proj-airi/stage-ui-three'
 import { HoloCoupon } from '@proj-airi/stage-ui/components'
 import {
   createEmptyModelSettingsRuntimeSnapshot,
@@ -40,7 +39,6 @@ import { petLiteFeatures, petLiteRuntimeFeatures } from '../../shared/pet-lite-f
 import { useChatSyncStore } from '../stores/chat-sync'
 import { useControlsIslandStore } from '../stores/controls-island'
 import { useStageWindowLifecycleStore } from '../stores/stage-window-lifecycle'
-import { shouldSampleStageTransparency } from '../utils/stage-three-transparency'
 import { createVoiceInputInteractionLifecycle } from '../utils/voice-input-lifecycle'
 import {
   assistantSpeechCooldownDeadline,
@@ -65,42 +63,21 @@ const { isOutside: isOutsideStatusIsland } = useElectronMouseInElement(statusIsl
 const isOutsideFor250Ms = refDebounced(isOutside, 250)
 const isOutsideStatusIslandFor250Ms = refDebounced(isOutsideStatusIsland, 250)
 const { x: relativeMouseX, y: relativeMouseY } = useElectronRelativeMouse()
-// NOTICE: In real-world use cases of Fade on Hover feature, the cursor may move around the edge of the
-// model rapidly, causing flickering effects when checking pixel transparency strictly.
-// Here we use render-target pixel sampling to keep detection aligned with the actual render output.
 const isTransparentByPixels = useCanvasPixelIsTransparentAtPoint(
   stageCanvas,
   relativeMouseX,
   relativeMouseY,
   { regionRadius: 25 },
 )
-const isTransparentByThree = useThreeSceneIsTransparentAtPoint(
-  widgetStageRef,
-  relativeMouseX,
-  relativeMouseY,
-  { regionRadius: 25 },
-)
-
 const settingsStore = useSettings()
 const { stageModelRenderer, stageModelSelectedUrl } = storeToRefs(settingsStore)
-const modelStore = useModelStore()
-const { sceneMutationLocked, scenePhase } = storeToRefs(modelStore)
 const { stagePaused } = storeToRefs(useStageWindowLifecycleStore())
 const { fadeOnHoverEnabled } = storeToRefs(useControlsIslandStore())
 const modelSettingsRuntimeOwnerInstanceId = `tamagotchi-main-stage:${Math.random().toString(36).slice(2, 10)}`
 const { data: modelSettingsRuntimeChannelEvent, post: postModelSettingsRuntimeChannelEvent } = useBroadcastChannel<ModelSettingsRuntimeChannelEvent, ModelSettingsRuntimeChannelEvent>({ name: modelSettingsRuntimeSnapshotChannelName })
-const shouldUseThreeTransparencyHitTest = computed(() => shouldSampleStageTransparency({
-  componentState: componentStateStage.value,
-  fadeOnHoverEnabled: fadeOnHoverEnabled.value,
-  stageModelRenderer: stageModelRenderer.value,
-  stagePaused: stagePaused.value,
-}))
 const isTransparent = computed(() => {
   if (stagePaused.value || componentStateStage.value !== 'mounted' || !fadeOnHoverEnabled.value)
     return true
-
-  if (stageModelRenderer.value === 'vrm')
-    return shouldUseThreeTransparencyHitTest.value ? isTransparentByThree.value : true
 
   if (stageModelRenderer.value === 'live2d')
     return isTransparentByPixels.value
@@ -136,20 +113,6 @@ const modelSettingsRuntimeSnapshot = computed<ModelSettingsRuntimeSnapshot>(() =
     })
   }
 
-  if (stageModelRenderer.value === 'vrm') {
-    return createEmptyModelSettingsRuntimeSnapshot({
-      ownerInstanceId: modelSettingsRuntimeOwnerInstanceId,
-      renderer: 'vrm',
-      phase: hasModel ? scenePhase.value : 'no-model',
-      controlsLocked: hasModel
-        ? (!stageMounted.value || sceneMutationLocked.value)
-        : false,
-      previewAvailable: hasModel,
-      canCapturePreview: false,
-      updatedAt: Date.now(),
-    })
-  }
-
   if (stageModelRenderer.value === 'spine') {
     const phase = resolveComponentStateToRuntimePhase(componentStateStage.value, { hasModel })
 
@@ -159,18 +122,6 @@ const modelSettingsRuntimeSnapshot = computed<ModelSettingsRuntimeSnapshot>(() =
       phase,
       controlsLocked: hasModel ? phase !== 'mounted' : false,
       previewAvailable: hasModel,
-      canCapturePreview: false,
-      updatedAt: Date.now(),
-    })
-  }
-
-  if (stageModelRenderer.value === 'godot') {
-    return createEmptyModelSettingsRuntimeSnapshot({
-      ownerInstanceId: modelSettingsRuntimeOwnerInstanceId,
-      renderer: 'godot',
-      phase: hasModel ? 'mounted' : 'no-model',
-      controlsLocked: false,
-      previewAvailable: false,
       canCapturePreview: false,
       updatedAt: Date.now(),
     })

@@ -27,9 +27,6 @@ import ResizeHandler from './components/ResizeHandler.vue'
 
 import {
   electronGetServerChannelConfig,
-  electronGodotStageGetStatus,
-  electronGodotStageStatusChanged,
-  electronGodotStageStop,
   electronSettingsNavigate,
   electronStartTrackMousePosition,
   i18nGetLocale,
@@ -108,28 +105,9 @@ function createFullStageRuntime() {
   const inspectPluginHost = useElectronEventaInvoke(electronPluginInspect)
   const startTrackingCursorPoint = useElectronEventaInvoke(electronStartTrackMousePosition)
   const reportPluginCapability = useElectronEventaInvoke(electronPluginUpdateCapability)
-  const getGodotStageStatus = useElectronEventaInvoke(electronGodotStageGetStatus)
-  const stopGodotStage = useElectronEventaInvoke(electronGodotStageStop)
   const syncArtistryConfig = useElectronEventaInvoke(artistrySyncConfig)
   const isAuxiliaryChatRoute = initialWindowRoutePath === '/chat'
-  const isGodotStageRoute = () => route.path === '/' || route.path.startsWith('/settings')
   const isWidgetsWindowRoute = () => route.path === '/widgets'
-
-  function syncGodotStageRenderer(state: { state: 'stopped' | 'starting' | 'running' | 'stopping' | 'error' }) {
-    if (!petLiteRuntimeFeatures.godotStage) {
-      if (settingsStore.stageModelRenderer === 'godot')
-        settingsStore.restoreBuiltInStageModelRenderer()
-      return
-    }
-
-    if (state.state === 'running') {
-      settingsStore.setStageModelRenderer('godot')
-      return
-    }
-
-    if ((state.state === 'stopped' || state.state === 'error') && settingsStore.stageModelRenderer === 'godot')
-      settingsStore.restoreBuiltInStageModelRenderer()
-  }
 
   async function refreshPluginRuntimeTools() {
     try {
@@ -202,14 +180,6 @@ function createFullStageRuntime() {
     }, { deep: true, immediate: true })
   }
 
-  context.value.on(electronGodotStageStatusChanged, (event) => {
-    if (!event.body) {
-      return
-    }
-
-    syncGodotStageRenderer(event.body)
-  })
-
   context.value.on(electronPluginToolsChanged, () => {
     void refreshPluginRuntimeTools()
   })
@@ -222,34 +192,12 @@ function createFullStageRuntime() {
 
       await displayModelsStore.loadDisplayModelsFromIndexedDB()
       await settingsStore.initializeStageModel()
-      if (!petLiteRuntimeFeatures.godotStage) {
-        try {
-          const godotStageStatus = await getGodotStageStatus()
-          if (godotStageStatus.state !== 'stopped')
-            await stopGodotStage()
-        }
-        catch (error) {
-          console.warn('[App] Failed to stop disabled Godot stage:', error)
-        }
-
-        if (settingsStore.stageModelRenderer === 'godot')
-          settingsStore.restoreBuiltInStageModelRenderer()
-      }
       if (petLiteRuntimeFeatures.hearing) {
         await settingsAudioDeviceStore.initialize()
       }
       else {
         settingsAudioDeviceStore.enabled = false
         settingsAudioDeviceStore.stopStream()
-      }
-
-      if (isGodotStageRoute()) {
-        try {
-          syncGodotStageRenderer(await getGodotStageStatus())
-        }
-        catch (error) {
-          console.warn('[App] Failed to fetch Godot stage status:', error)
-        }
       }
 
       if (petLiteRuntimeFeatures.channelServer) {

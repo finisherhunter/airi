@@ -1,10 +1,4 @@
 <script setup lang="ts">
-import type {
-  StageViewErrorPayload,
-  StageViewPatch,
-  StageViewSnapshotPayload,
-} from '@proj-airi/stage-shared/godot-stage'
-
 import type { DisplayModel } from '../../../../stores/display-models'
 import type { ModelSettingsRuntimeSnapshot } from './runtime'
 
@@ -13,10 +7,8 @@ import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import Godot from './godot.vue'
 import Live2D from './live2d.vue'
 import Spine from './spine.vue'
-import VRM from './vrm.vue'
 
 import { useAiriCardStore } from '../../../../stores/modules/airi-card'
 import { useSettings } from '../../../../stores/settings'
@@ -28,20 +20,14 @@ interface ModelSettingsPanelProps {
   settingsClass?: string | string[]
   allowExtractColors?: boolean
   runtimeSnapshot: ModelSettingsRuntimeSnapshot
-  godotViewSnapshot?: StageViewSnapshotPayload | null
-  godotViewError?: StageViewErrorPayload
-  godotViewControlsLocked?: boolean
 }
 
 interface ModelSettingsPanelEmits {
   extractColorsFromModel: []
-  patchGodotViewState: [patch: StageViewPatch]
 }
 
 const props = withDefaults(defineProps<ModelSettingsPanelProps>(), {
   allowExtractColors: true,
-  godotViewControlsLocked: true,
-  godotViewSnapshot: null,
 })
 
 const emit = defineEmits<ModelSettingsPanelEmits>()
@@ -80,9 +66,6 @@ async function handleModelPick(selectedModel: DisplayModel | undefined) {
         <template #zip>
           <code>.zip</code>
         </template>
-        <template #vrm>
-          <code>.vrm</code>
-        </template>
       </i18n-t>
       <p>
         {{ t('settings.model-select.panel-callout.model-type-example') }}
@@ -103,27 +86,12 @@ async function handleModelPick(selectedModel: DisplayModel | undefined) {
       :runtime-snapshot="runtimeSnapshot"
       @extract-colors-from-model="emit('extractColorsFromModel')"
     />
-    <VRM
-      v-if="effectiveRenderer === 'vrm'"
-      :allow-extract-colors="allowExtractColors"
-      :palette="palette"
-      :runtime-snapshot="runtimeSnapshot"
-      @extract-colors-from-model="emit('extractColorsFromModel')"
-    />
     <Spine
       v-if="effectiveRenderer === 'spine'"
       :allow-extract-colors="allowExtractColors"
       :palette="palette"
       :runtime-snapshot="runtimeSnapshot"
       @extract-colors-from-model="$emit('extractColorsFromModel')"
-    />
-    <Godot
-      v-if="effectiveRenderer === 'godot'"
-      :runtime-snapshot="runtimeSnapshot"
-      :view-snapshot="godotViewSnapshot"
-      :view-error="godotViewError"
-      :view-controls-locked="godotViewControlsLocked"
-      @patch-view-state="emit('patchGodotViewState', $event)"
     />
   </div>
 </template>

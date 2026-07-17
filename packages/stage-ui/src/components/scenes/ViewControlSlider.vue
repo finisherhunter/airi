@@ -1,10 +1,4 @@
 <script setup lang="ts">
-import {
-  defaultControlConfig as threeControlConfig,
-  formatter as threeFormatter,
-  useModelStore,
-  useThreeViewControl,
-} from '@proj-airi/stage-ui-three'
 import { RoundRange } from '@proj-airi/ui'
 import { storeToRefs } from 'pinia'
 import { computed, onUnmounted } from 'vue'
@@ -18,38 +12,28 @@ import { useSettingsStageModel } from '../../stores/settings/stage-model'
 
 const { stageModelRenderer } = storeToRefs(useSettingsStageModel())
 const live2d = useL2dViewControl()
-const three = useThreeViewControl()
-const { sceneMutationLocked } = storeToRefs(useModelStore())
 
-const activeRenderer = computed<'live2d' | 'vrm' | null>(() => {
+const activeRenderer = computed<'live2d' | null>(() => {
   if (stageModelRenderer.value === 'live2d')
     return 'live2d'
-  if (stageModelRenderer.value === 'vrm')
-    return 'vrm'
   return null
 })
 
 const controlEnabled = computed(() => {
   if (activeRenderer.value === 'live2d')
     return live2d.viewControlsEnabled.value
-  if (activeRenderer.value === 'vrm')
-    return three.viewControlsEnabled.value
   return false
 })
 
 const activeControlKey = computed(() => {
   if (activeRenderer.value === 'live2d')
     return live2d.viewControlMode.value
-  if (activeRenderer.value === 'vrm')
-    return three.viewControlMode.value
   return null
 })
 
 const activeControlConfig = computed(() => {
   if (activeRenderer.value === 'live2d')
     return live2dControlConfig[live2d.viewControlMode.value]
-  if (activeRenderer.value === 'vrm')
-    return threeControlConfig[three.viewControlMode.value]
   return null
 })
 
@@ -66,21 +50,6 @@ const controlledValue = computed({
       }
     }
 
-    if (activeRenderer.value === 'vrm') {
-      switch (three.viewControlMode.value) {
-        case 'x':
-          return three.modelOffset.value.x
-        case 'y':
-          return three.modelOffset.value.y
-        case 'z':
-          return three.modelOffset.value.z
-        case 'cameraDistance':
-          return three.cameraDistance.value
-        case 'cameraFOV':
-          return three.cameraFOV.value
-      }
-    }
-
     return 0
   },
   set(value) {
@@ -89,25 +58,17 @@ const controlledValue = computed({
       return
     }
 
-    if (activeRenderer.value === 'vrm') {
-      if (sceneMutationLocked.value)
-        return
-      three.set(three.viewControlMode.value, value)
-    }
   },
 })
 
 const formattedValue = computed(() => {
   if (activeRenderer.value === 'live2d')
     return live2dFormatter[live2d.viewControlMode.value](controlledValue.value)
-  if (activeRenderer.value === 'vrm')
-    return threeFormatter[three.viewControlMode.value](controlledValue.value)
   return ''
 })
 
 onUnmounted(() => {
   live2d.viewControlsEnabled.value = false
-  three.viewControlsEnabled.value = false
 })
 </script>
 
@@ -120,7 +81,6 @@ onUnmounted(() => {
             v-model="controlledValue"
             :min="activeControlConfig.min"
             :max="activeControlConfig.max"
-            :disabled="activeRenderer === 'vrm' && sceneMutationLocked"
             :step="activeControlConfig.step"
             handle-wheel
             data-direction="vertical"

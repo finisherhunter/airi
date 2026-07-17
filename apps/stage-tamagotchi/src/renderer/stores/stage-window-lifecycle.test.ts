@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { shouldSampleStageTransparency } from '../utils/stage-three-transparency'
 import { createDefaultWindowLifecycleState, shouldPauseStageFromLifecycle } from './stage-window-lifecycle'
 
 describe('stage window lifecycle helpers', () => {
@@ -30,40 +29,4 @@ describe('stage window lifecycle helpers', () => {
     })).toBe(true)
   })
 
-  it('samples stage transparency only for mounted vrm stage while fade-on-hover is active', () => {
-    expect(shouldSampleStageTransparency({
-      componentState: 'mounted',
-      fadeOnHoverEnabled: true,
-      stageModelRenderer: 'vrm',
-      stagePaused: false,
-    })).toBe(true)
-
-    expect(shouldSampleStageTransparency({
-      componentState: 'loading',
-      fadeOnHoverEnabled: true,
-      stageModelRenderer: 'vrm',
-      stagePaused: false,
-    })).toBe(false)
-
-    expect(shouldSampleStageTransparency({
-      componentState: 'mounted',
-      fadeOnHoverEnabled: false,
-      stageModelRenderer: 'vrm',
-      stagePaused: false,
-    })).toBe(false)
-
-    expect(shouldSampleStageTransparency({
-      componentState: 'mounted',
-      fadeOnHoverEnabled: true,
-      stageModelRenderer: 'live2d',
-      stagePaused: false,
-    })).toBe(false)
-
-    expect(shouldSampleStageTransparency({
-      componentState: 'mounted',
-      fadeOnHoverEnabled: true,
-      stageModelRenderer: 'vrm',
-      stagePaused: true,
-    })).toBe(false)
-  })
 })

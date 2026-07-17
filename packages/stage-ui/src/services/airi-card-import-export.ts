@@ -18,7 +18,6 @@ const MANIFEST_PATH = 'manifest.json'
 const MODEL_EXT: Partial<Record<DisplayModelFormat, string>> = {
   [DisplayModelFormat.Live2dZip]: 'zip',
   [DisplayModelFormat.SpineZip]: 'zip',
-  [DisplayModelFormat.VRM]: 'vrm',
 }
 
 type DisplayModelsStore = ReturnType<typeof useDisplayModelsStore>
@@ -31,7 +30,7 @@ const manifestSchema = object({
   resources: optional(object({
     displayModel: object({
       path: string(),
-      format: picklist([DisplayModelFormat.Live2dZip, DisplayModelFormat.SpineZip, DisplayModelFormat.VRM]),
+      format: picklist([DisplayModelFormat.Live2dZip, DisplayModelFormat.SpineZip]),
       name: string(),
     }),
   })),

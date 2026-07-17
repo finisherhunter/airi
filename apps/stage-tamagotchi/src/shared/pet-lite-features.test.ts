@@ -25,7 +25,6 @@ describe('pet lite feature policy', () => {
     expect(petLiteRuntimeFeatures.artistry).toBe(false)
     expect(petLiteRuntimeFeatures.mcp).toBe(false)
     expect(petLiteRuntimeFeatures.channelServer).toBe(false)
-    expect(petLiteRuntimeFeatures.godotStage).toBe(false)
     expect(petLiteRuntimeFeatures.chat || petLiteRuntimeFeatures.hearing).toBe(false)
   })
 

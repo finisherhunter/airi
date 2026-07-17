@@ -135,13 +135,6 @@ export default {
       rm(join(unpackedNodeModulesPath, 'electron-click-drag-plugin', 'build', 'Release', 'linux-arm64'), { force: true, recursive: true }),
     ])
   },
-  extraResources: [
-    {
-      from: '../../engines/stage-tamagotchi-godot/build/${os}',
-      to: 'godot-stage',
-      filter: ['**/*'],
-    },
-  ],
   extraMetadata: {
     name: 'ai.moeru.airi',
     main: 'out/main/index.js',
