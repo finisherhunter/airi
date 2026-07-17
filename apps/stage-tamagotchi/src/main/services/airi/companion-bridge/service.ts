@@ -1,7 +1,12 @@
-import type { ClientOptions } from '@proj-airi/server-sdk'
 import type { CompanionCapabilities, CompanionEvent, CompanionIntent, CompanionPriority } from '@proj-airi/plugin-protocol/types'
+import type { ClientOptions } from '@proj-airi/server-sdk'
 import type { WebSocketEventOptionalSource } from '@proj-airi/server-shared/types'
 import type { Lifecycle } from 'injeca'
+
+import type { CompanionReactionRequest } from '../../../../shared/eventa'
+import type { ReactionAck, ReactionQueueItem } from './contracts'
+
+import process from 'node:process'
 
 import { randomUUID } from 'node:crypto'
 import { chmod, rename, unlink, writeFile } from 'node:fs/promises'
@@ -9,8 +14,6 @@ import { join } from 'node:path'
 
 import { Client } from '@proj-airi/server-sdk'
 
-import type { CompanionReactionRequest } from '../../../../shared/eventa'
-import type { ReactionAck, ReactionQueueItem } from './contracts'
 import { defaultReactionTtlMs } from './contracts'
 import { resolveCompanionReaction } from './resolver'
 import { createReactionScheduler } from './scheduler'
@@ -19,7 +22,7 @@ export const companionDiscoveryFileName = 'companion-bridge.json'
 const companionProtocolVersion = 1
 const maxCompanionTextLength = 2_048
 
-type CompanionIncomingMessage = { data: { event: unknown } }
+interface CompanionIncomingMessage { data: { event: unknown } }
 
 export interface CompanionBridgeClient {
   onEvent: (event: 'companion:event', callback: (message: CompanionIncomingMessage) => void | Promise<void>) => () => void
@@ -202,9 +205,17 @@ export function createCompanionBridge(params: CompanionBridgeServiceOptions): Co
   const discoveryPath = join(params.app.getPath('userData'), companionDiscoveryFileName)
   const schedulerTimers = new Map<string, ReturnType<typeof setTimeout>>()
   const sentAckKeys = new Map<string, string>()
+  let client: CompanionBridgeClient | undefined
+  let removeEventListener: (() => void) | undefined
+  let activeReactionId: string | undefined
+  let activeReactionTimer: ReturnType<typeof setTimeout> | undefined
+  let running = false
+  let starting = false
+  let rendererDisposed = false
+
   const scheduler = createReactionScheduler({
     now,
-    onStart: item => {
+    onStart: (item) => {
       void deliverReaction(item)
     },
     onInterrupt: (item) => {
@@ -219,14 +230,6 @@ export function createCompanionBridge(params: CompanionBridgeServiceOptions): Co
       }
     },
   })
-
-  let client: CompanionBridgeClient | undefined
-  let removeEventListener: (() => void) | undefined
-  let activeReactionId: string | undefined
-  let activeReactionTimer: ReturnType<typeof setTimeout> | undefined
-  let running = false
-  let starting = false
-  let rendererDisposed = false
 
   function send(message: WebSocketEventOptionalSource) {
     client?.send(message)
@@ -336,8 +339,7 @@ export function createCompanionBridge(params: CompanionBridgeServiceOptions): Co
       }
 
       running = true
-      let createdClient: CompanionBridgeClient | undefined
-      createdClient = createClient({
+      const createdClient = createClient({
         url: connection.endpoint,
         name: 'airi-companion-bridge',
         token: connection.token,
