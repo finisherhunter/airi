@@ -380,3 +380,12 @@ merely slower progress.
 - Before stopping a process, distinguish stale agent-owned processes from the user's active dev server. Never stop a user's active development process merely to make installation convenient.
 - Treat `ERR_PNPM_EBUSY`, partial workspace links, missing binaries, or a changed lockfile after concurrent installs as an incomplete installation. Repair with one clean install, then rerun typecheck and tests.
 - Do not claim the environment is ready from a partial `node_modules` check. Verify the install result, required workspace links, package-manager exit status, typecheck, and the relevant tests.
+
+### Development Verification and Packaging Policy
+
+- Use the local development build for behavioral verification: startup, model loading, model switching, appearance settings, caption display, motion playback, and Neko Companion Bridge events.
+- Do not run Electron packaging, `win-unpacked` smoke checks, or installer builds locally unless the user explicitly requests a local package. These operations are resource-intensive and can expose workspace-installation or process-lock problems on the development machine.
+- After local development verification, commit and push the AIRI changes on `neko-pet-lite`. GitHub Actions is the packaging and production-dependency verification environment for Windows artifacts.
+- A passing development build does not prove that packaged dependencies are complete. Treat a successful GitHub Actions package build and its packaged startup checks as the release gate.
+- Neko-only changes do not require rebuilding AIRI. Rebuild AIRI only when AIRI runtime code, assets, or production dependency closure changes.
+- When GitHub packaging fails, inspect the failed job and artifact logs before rerunning or changing dependencies; do not infer failure from a slow job alone.
